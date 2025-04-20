@@ -1,0 +1,103 @@
+/* Add this to your global CSS file */
+.hero-section {
+  opacity: 1 !important;
+  perspective: 1000px;
+}
+
+.film-strip-initial {
+  visibility: hidden; /* Hidden until GSAP runs */
+}
+
+.frame-initial {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.text-initial > * {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+/* Grid pattern */
+.grid-pattern {
+  background-image: linear-gradient(
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Scroll indicator animation */
+@keyframes bounce {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+
+@keyframes scrollPulse {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.animate-scrollPulse {
+  animation: scrollPulse 1.5s infinite;
+}
+
+/* Performance optimizations */
+.hero-section * {
+  will-change: transform, opacity;
+}
+
+/* Film strip fallback */
+@media (prefers-reduced-motion: reduce) {
+  .film-strip-initial {
+    visibility: visible;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .text-initial > * {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .frame-initial {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .particle {
+    display: none !important;
+  }
+}
+
+/* Futuristic hover effects */
+.frame-initial:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(100, 200, 255, 0.3);
+  transition: all 0.3s ease;
+}
