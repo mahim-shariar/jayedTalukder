@@ -236,9 +236,7 @@ const Showreel = () => {
                   className={`w-full bg-gray-500/10 max-w-md mb-6 p-4 rounded-xl border border-white/10 transition-all duration-500 animate-fade-in`}
                 >
                   <div className="flex items-center justify-center space-x-3">
-                    <div
-                      className={`p-3 rounded-full bg-gradient-to-r from-rose-500 to-red-500 shadow-lg`}
-                    >
+                    <div className={`p-3 rounded-full bg-red-500 shadow-lg`}>
                       {categories.find((c) => c.id === activeCategory)?.icon}
                     </div>
                     <div>
@@ -257,7 +255,7 @@ const Showreel = () => {
                         onClick={() => setActiveCategory(category.id)}
                         className={`px-5 py-2 rounded-full flex items-center whitespace-nowrap transition-all duration-300 ${
                           activeCategory === category.id
-                            ? `bg-gradient-to-r from-rose-500 to-red-500 text-white shadow-lg`
+                            ? `bg-red-500 text-white shadow-lg`
                             : `text-white/70 hover:text-white bg-transparent hover:bg-white/5`
                         }`}
                       >
