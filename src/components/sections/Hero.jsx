@@ -290,8 +290,6 @@ export default function Hero() {
     if (isHovering) {
       setActiveFrame(index);
       gsap.to(framesRef.current[index], {
-        scale: 1.1,
-        zIndex: 10,
         boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.4)",
         duration: 0.4,
         ease: "power2.out",
@@ -299,8 +297,6 @@ export default function Hero() {
     } else {
       setActiveFrame(null);
       gsap.to(framesRef.current[index], {
-        scale: 1,
-        zIndex: 1,
         boxShadow: "none",
         duration: 0.6,
         ease: "power2.out",
@@ -393,7 +389,7 @@ export default function Hero() {
             ref={(el) => (framesRef.current[i] = el)}
             className={`inline-block bg-neutral-900 overflow-hidden rounded-md shadow-lg transition-all duration-300 ${
               windowSize.width >= 768 ? "cursor-pointer" : ""
-            } ${activeFrame === i ? "ring-2 ring-red-500 z-10" : ""}`}
+            }`}
             onMouseEnter={() =>
               windowSize.width >= 768 && handleFrameHover(i, true)
             }
