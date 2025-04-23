@@ -118,6 +118,7 @@ export default function Services() {
   return (
     <section
       ref={sectionRef}
+      id="services"
       className="services-section min-h-screen py-24 bg-[#0a0a0a] text-white relative overflow-hidden"
     >
       {/* Dark gradient background - matches About page */}

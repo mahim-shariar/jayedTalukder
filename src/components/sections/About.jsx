@@ -2,8 +2,8 @@ import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import { TextPlugin } from "gsap/TextPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import jayed_Profile from "../../assets/image/jayed-2.jpg";
-import macbookImage from "../../assets/image/jayed-9.jpg";
+import jayed_Profile from "/image/jayed-2.JPG";
+import macbookImage from "/image/jayed-9.jpg";
 
 gsap.registerPlugin(TextPlugin, ScrollTrigger);
 
@@ -163,6 +163,7 @@ export default function About() {
   return (
     <section
       ref={aboutSectionRef}
+      id="about"
       className="about-section min-h-screen bg-[#0a0a0a] text-white overflow-hidden relative"
     >
       {/* Dark gradient background */}

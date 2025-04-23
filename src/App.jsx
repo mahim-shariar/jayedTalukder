@@ -10,6 +10,7 @@ import Testimonials from "./components/sections/Testimonials";
 import Contact from "./components/sections/Contact";
 import EasterEgg from "./components/sections/EasterEgg";
 import Footer from "./components/sections/Footer";
+import Navbar from "./components/sections/Navber";
 
 // import "./App.css";
 
@@ -17,6 +18,7 @@ function App() {
   return (
     <div className="app">
       <CustomCursor />
+      <Navbar />
 
       <Hero />
       <About />

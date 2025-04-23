@@ -206,6 +206,7 @@ export default function Testimonials() {
   return (
     <section
       ref={sectionRef}
+      id="testimonials"
       className="testimonials-section py-24 bg-[#0a0a0a] text-white relative overflow-hidden"
     >
       {/* Background elements */}

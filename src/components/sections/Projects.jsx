@@ -104,7 +104,7 @@ export default function Projects() {
   };
 
   return (
-    <section className="projects-section min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
+    <section id="projects" className="projects-section min-h-screen bg-[#0a0a0a] text-white relative overflow-hidden">
       {/* Dark gradient background matching About page */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a] z-0"></div>
 

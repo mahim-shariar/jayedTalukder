@@ -335,6 +335,7 @@ export default function Hero() {
       ref={heroRef}
       className="hero-section h-screen w-full overflow-hidden flex items-center justify-center relative bg-neutral-950"
       onMouseMove={handleMouseMove}
+      id="home"
       style={{
         backgroundImage: `
           radial-gradient(circle at ${mousePos.x}% ${mousePos.y}%, 
