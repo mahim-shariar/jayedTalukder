@@ -32,6 +32,10 @@ const categories = [
   { id: "shortfilm", name: "Short Films" },
   { id: "islamic", name: "Islamic" },
   { id: "podcast", name: "Podcast" },
+  { id: "myFirstEdit", name: "My First Edit" },
+  { id: "mySelfIntro", name: "My Self Introduction" },
+  { id: "behindTheScenes", name: "Behind The Scenes" },
+  { id: "bloopers", name: "Bloopers" },
 ];
 
 const Dashboard = () => {

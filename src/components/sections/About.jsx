@@ -4,6 +4,7 @@ import { TextPlugin } from "gsap/TextPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import jayed_Profile from "/image/jayed-2.JPG";
 import macbookImage from "/image/jayed-9.jpg";
+import { getVideoReelsByCategory } from "../../services/api";
 
 gsap.registerPlugin(TextPlugin, ScrollTrigger);
 
@@ -21,6 +22,50 @@ export default function About() {
   const leftColumnRef = useRef(null);
   const rightColumnRef = useRef(null);
   const storyContentRef = useRef(null);
+  const [introVideo, setIntroVideo] = useState(null);
+  const [loadingVideo, setLoadingVideo] = useState(true);
+  const [videoPlaying, setVideoPlaying] = useState(false);
+
+  useEffect(() => {
+    // Fetch intro video when component mounts
+    const fetchIntroVideo = async () => {
+      try {
+        setLoadingVideo(true);
+        const response = await getVideoReelsByCategory("mySelfIntro");
+        if (
+          response.data &&
+          response.data.videoReels &&
+          response.data.videoReels.length > 0
+        ) {
+          // Use the first video from the response
+          setIntroVideo(response.data.videoReels[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch intro video:", error);
+      } finally {
+        setLoadingVideo(false);
+      }
+    };
+
+    fetchIntroVideo();
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handleVideoEnd = () => {
+      setVideoPlaying(false);
+      // Reset video to show thumbnail/poster
+      video.currentTime = 0;
+    };
+
+    video.addEventListener("ended", handleVideoEnd);
+
+    return () => {
+      video.removeEventListener("ended", handleVideoEnd);
+    };
+  }, []);
 
   useEffect(() => {
     // Set initial hidden state
@@ -113,13 +158,20 @@ export default function About() {
   }, []);
 
   const handleVideoHover = (enter) => {
-    if (enter) {
+    if (videoRef.current) {
+      if (enter) {
+        gsap.to(videoRef.current, { scale: 1.03, duration: 0.5 });
+      } else {
+        gsap.to(videoRef.current, { scale: 1, duration: 0.5 });
+      }
+    }
+  };
+
+  const handlePlayVideo = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
       videoRef.current.muted = false;
-      videoRef.current.volume = 0.3;
-      gsap.to(videoRef.current, { scale: 1.03, duration: 0.5 });
-    } else {
-      videoRef.current.muted = true;
-      gsap.to(videoRef.current, { scale: 1, duration: 0.5 });
+      setVideoPlaying(true);
     }
   };
 
@@ -187,25 +239,64 @@ export default function About() {
           onMouseEnter={() => handleVideoHover(true)}
           onMouseLeave={() => handleVideoHover(false)}
         >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10 pointer-events-none"></div>
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          >
-            <source src="/assets/reel.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute bottom-4 left-4 bg-black/80 px-3 py-1 rounded text-sm font-mono z-20 backdrop-blur-sm">
-            ▶︎ REEL_2024.MP4
-          </div>
-          <div className="absolute top-4 right-4 flex gap-2 z-20">
-            <span className="w-3 h-3 rounded-full bg-red-500 shadow-lg shadow-red-900/50"></span>
-            <span className="w-3 h-3 rounded-full bg-yellow-500 shadow-lg shadow-yellow-900/50"></span>
-            <span className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-900/50"></span>
-          </div>
+          {loadingVideo ? (
+            <div className="absolute inset-0 bg-gray-800 rounded-sm animate-pulse flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
+            </div>
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10 pointer-events-none"></div>
+              <video
+                ref={videoRef}
+                playsInline
+                className="w-full h-full object-cover"
+                src={introVideo?.videoUrl || "/assets/reel.mp4"}
+                poster={introVideo?.thumbnailUrl}
+                onClick={handlePlayVideo}
+              >
+                <source
+                  src={introVideo?.videoUrl || "/assets/reel.mp4"}
+                  type={
+                    introVideo?.videoUrl?.endsWith(".webm")
+                      ? "video/webm"
+                      : "video/mp4"
+                  }
+                />
+                Your browser does not support the video tag.
+              </video>
+
+              {/* Play button overlay - shows when video isn't playing */}
+              {!videoPlaying && (
+                <div
+                  className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer"
+                  onClick={handlePlayVideo}
+                >
+                  <div className="w-16 h-16 bg-red-500/80 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <svg
+                      className="w-8 h-8 text-white"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              )}
+
+              <div className="absolute bottom-4 left-4 bg-black/80 px-3 py-1 rounded text-sm font-mono z-20 backdrop-blur-sm">
+                {introVideo ? `▶︎ ${introVideo.title}` : "▶︎ REEL_2024.MP4"}
+              </div>
+              <div className="absolute top-4 right-4 flex gap-2 z-20">
+                <span className="w-3 h-3 rounded-full bg-red-500 shadow-lg shadow-red-900/50"></span>
+                <span className="w-3 h-3 rounded-full bg-yellow-500 shadow-lg shadow-yellow-900/50"></span>
+                <span className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-900/50"></span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Personal story - Right side */}
@@ -248,7 +339,7 @@ export default function About() {
                   <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjAzIiBudW1PY3RhdmVzPSIyIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4xNSIvPgo8L3N2Zz4=')] opacity-30"></div>
                 </div>
                 <div className="absolute -bottom-2 -right-2 bg-red-500 text-white px-2 py-1 text-xs rotate-3 z-20 shadow-lg shadow-red-900/50">
-                  DIRECTOR'S CUT
+                  EDITOR'S CUT
                 </div>
               </div>
 

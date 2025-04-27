@@ -96,7 +96,7 @@ export default function Navbar() {
     { name: "Home", path: "#home" },
     { name: "About", path: "#about" },
     { name: "Showreel", path: "#showreel" },
-    { name: "Services", path: "#services" },
+
     { name: "Testimonials", path: "#testimonials" },
     { name: "Contact", path: "#contact" },
   ];

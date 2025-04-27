@@ -26,6 +26,14 @@ const Showreel = () => {
   const [projects, setProjects] = useState([]);
   const videoRefs = useRef({});
 
+  // Categories to exclude
+  const excludedCategories = [
+    "myFirstEdit",
+    "bloopers",
+    "behindTheScenes",
+    "mySelfIntro",
+  ];
+
   // Categories with React Icons
   const categories = [
     {
@@ -119,17 +127,20 @@ const Showreel = () => {
         response = await getVideoReelsByCategory(category);
       }
 
-      const videos = response.data.videoReels.map((video) => ({
-        id: video._id,
-        title: video.title,
-        category: video.category,
-        video: video.videoUrl,
-        thumbnail: video.thumbnailUrl || "/default-thumbnail.jpg",
-        color: getRandomColor(),
-        tags: video.tags || [],
-        year: new Date(video.createdAt).getFullYear().toString(),
-        description: video.description || "",
-      }));
+      // Filter out excluded categories
+      const videos = response.data.videoReels
+        .filter((video) => !excludedCategories.includes(video.category))
+        .map((video) => ({
+          id: video._id,
+          title: video.title,
+          category: video.category,
+          video: video.videoUrl,
+          thumbnail: video.thumbnailUrl || "/default-thumbnail.jpg",
+          color: getRandomColor(),
+          tags: video.tags || [],
+          year: new Date(video.createdAt).getFullYear().toString(),
+          description: video.description || "",
+        }));
 
       setProjects(videos);
     } catch (error) {

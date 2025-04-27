@@ -1,9 +1,21 @@
+// components/Contact.js
 import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import confetti from "canvas-confetti";
+import { sendEmail } from "../../utils/emailService";
+import { FaPhone, FaEnvelope, FaWhatsapp, FaLinkedin } from "react-icons/fa";
+import { FiSend, FiLoader } from "react-icons/fi";
+import { BsStars, BsPencil } from "react-icons/bs";
+import { HiOutlineLocationMarker } from "react-icons/hi";
 
 export default function Contact() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -16,35 +28,70 @@ export default function Contact() {
 
   const socialLinks = [
     {
-      icon: "📱",
+      icon: <FaPhone className="text-2xl h-14 my-auto " />,
       platform: "Call",
-      handle: "+880 1234 567890",
-      url: "tel:+8801234567890",
+      handle: "+8801906979013",
+      url: "tel:+8801906979013",
     },
     {
-      icon: "✉️",
+      icon: <FaEnvelope className="text-2xl  h-14 my-auto  " />,
       platform: "Email",
-      handle: "hello@jayed.com",
-      url: "mailto:hello@jayed.com",
+      handle: "jayedbinkibria@gmail.com",
+      url: "mailto:jayedbinkibria@gmail.com",
     },
-    { icon: "🎬", platform: "Instagram", handle: "@jayed.films", url: "#" },
-    { icon: "📹", platform: "YouTube", handle: "Jayed Films", url: "#" },
+    {
+      icon: <FaWhatsapp className="text-2xl text-green-600  h-14 my-auto " />,
+      platform: "WhatsApp",
+      handle: "01794598569",
+      url: "https://wa.me/8801794598569",
+    },
+    {
+      icon: <FaLinkedin className="text-2xl text-blue-600  h-14 my-auto " />,
+      platform: "LinkedIn",
+      handle: "jayedbinkibria",
+      url: "https://www.linkedin.com/in/jayed-bin-kibria-233570254/",
+    },
   ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    confetti({
-      particleCount: 150,
-      spread: 80,
-      origin: { y: 0.6 },
-      colors: ["#ef4444", "#f43f5e", "#dc2626"],
-      shapes: ["circle", "star"],
-    });
-    setIsSubmitted(true);
-    setTimeout(() => setIsSubmitted(false), 3000);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  // Generate red star particles with different sizes and opacities
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      await sendEmail({
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+      });
+
+      // Show success effects
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ["#ef4444", "#f43f5e", "#dc2626"],
+        shapes: ["circle", "star"],
+      });
+
+      setIsSubmitted(true);
+      setFormData({ name: "", email: "", message: "" });
+      setTimeout(() => setIsSubmitted(false), 3000);
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      alert("Failed to send message. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const generateStars = () => {
     const starColors = [
       "#ff0000",
@@ -105,7 +152,6 @@ export default function Contact() {
     });
   };
 
-  // Generate red shooting stars
   const generateShootingStars = () => {
     return [...Array(6)].map((_, i) => {
       const startX = Math.random() * 100;
@@ -197,13 +243,13 @@ export default function Contact() {
             viewport={{ once: true, margin: "-50px" }}
           >
             <h3 className="text-2xl font-medium mb-6 flex items-center">
-              <span className="text-red-400 mr-3">✍️</span>
+              <BsPencil className="text-red-400 mr-3 text-xl" />
               <span>Send a Message</span>
             </h3>
 
             {isSubmitted ? (
               <div className="text-center py-8">
-                <div className="text-5xl mb-4">🎬</div>
+                <BsStars className="text-5xl mb-4 mx-auto text-red-400" />
                 <h4 className="text-xl font-medium mb-2">Message Sent!</h4>
                 <p className="text-white/70">I'll get back to you soon</p>
               </div>
@@ -217,9 +263,12 @@ export default function Contact() {
                 >
                   <input
                     type="text"
+                    name="name"
                     placeholder="Your Name"
                     className="w-full bg-black/30 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40"
                     required
+                    value={formData.name}
+                    onChange={handleChange}
                   />
                 </motion.div>
                 <motion.div
@@ -230,9 +279,12 @@ export default function Contact() {
                 >
                   <input
                     type="email"
+                    name="email"
                     placeholder="Email Address"
                     className="w-full bg-black/30 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40"
                     required
+                    value={formData.email}
+                    onChange={handleChange}
                   />
                 </motion.div>
                 <motion.div
@@ -243,9 +295,12 @@ export default function Contact() {
                 >
                   <textarea
                     rows="4"
+                    name="message"
                     placeholder="Tell me about your project..."
                     className="w-full bg-black/30 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40"
                     required
+                    value={formData.message}
+                    onChange={handleChange}
                   ></textarea>
                 </motion.div>
                 <motion.div
@@ -257,10 +312,20 @@ export default function Contact() {
                   <button
                     type="submit"
                     className="w-full py-4 bg-gradient-to-r from-red-600 to-red-800 text-white font-medium rounded-lg hover:from-red-500 hover:to-red-700 transition-all duration-300 flex items-center justify-center group relative overflow-hidden mt-6"
+                    disabled={isLoading}
                   >
                     <span className="relative z-10 flex items-center">
-                      <span className="mr-2">🚀</span>
-                      <span>Launch Project</span>
+                      {isLoading ? (
+                        <>
+                          <FiLoader className="mr-2 animate-spin" />
+                          <span>Sending...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FiSend className="mr-2" />
+                          <span>Launch Project</span>
+                        </>
+                      )}
                     </span>
                     <span className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"></span>
                   </button>
@@ -286,9 +351,11 @@ export default function Contact() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
                 viewport={{ once: true }}
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 <div className="flex items-start">
-                  <span className="text-3xl mr-4 group-hover:text-red-400 transition-colors">
+                  <span className="text-xl mr-4 group-hover:text-red-400 transition-colors">
                     {link.icon}
                   </span>
                   <div>
@@ -314,7 +381,10 @@ export default function Contact() {
           transition={{ delay: 0.6 }}
           viewport={{ once: true }}
         >
-          <p>📍 Studio Location: Dhaka, Bangladesh</p>
+          <div className="flex items-center justify-center">
+            <HiOutlineLocationMarker className="mr-2" />
+            <p>Studio Location: Dhaka, Bangladesh</p>
+          </div>
           <p className="mt-1">Available Worldwide for Projects</p>
         </motion.div>
       </motion.div>

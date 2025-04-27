@@ -449,15 +449,6 @@ export default function ProfilePage() {
                     </div>
                   </form>
 
-                  <div className="mt-8 pt-6 border-t border-white/10">
-                    <button
-                      onClick={() => setShowForgotPasswordForm(true)}
-                      className="text-red-400 hover:text-red-300 text-sm font-mono"
-                    >
-                      Forgot your password?
-                    </button>
-                  </div>
-
                   <div className="mt-12 pt-6 border-t border-white/10">
                     <h3 className="text-xl font-semibold text-white mb-4">
                       Security Recommendations

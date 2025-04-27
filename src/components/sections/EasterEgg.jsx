@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { gsap } from "gsap";
 import { motion } from "framer-motion";
-import { login } from "../../services/api";
+import { login, getVideoReelsByCategory } from "../../services/api";
 
 export default function EasterEgg() {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -13,10 +13,14 @@ export default function EasterEgg() {
   const riddleRef = useRef(null);
   const [userAnswer, setUserAnswer] = useState("");
   const [showRiddle, setShowRiddle] = useState(false);
-  const [activeTab, setActiveTab] = useState("first-edit");
+  const [activeTab, setActiveTab] = useState("myFirstEdit");
   const [currentHint, setCurrentHint] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [videos, setVideos] = useState([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [playingVideos, setPlayingVideos] = useState({});
+  const videoRefs = useRef({});
 
   // Login state
   const [loginData, setLoginData] = useState({
@@ -122,6 +126,32 @@ export default function EasterEgg() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Fetch videos when active tab changes
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        setLoadingVideos(true);
+        const categoryMap = {
+          myFirstEdit: "myFirstEdit",
+          bloopers: "bloopers",
+          behindScenes: "behindTheScenes",
+        };
+
+        const response = await getVideoReelsByCategory(categoryMap[activeTab]);
+        setVideos(response.data.videoReels || []);
+      } catch (error) {
+        console.error("Error fetching videos:", error);
+        setVideos([]);
+      } finally {
+        setLoadingVideos(false);
+      }
+    };
+
+    if (isUnlocked && showModal) {
+      fetchVideos();
+    }
+  }, [activeTab, isUnlocked, showModal]);
+
   // Unlock animations
   useEffect(() => {
     if (isUnlocked) {
@@ -209,8 +239,39 @@ export default function EasterEgg() {
     setHintIndex((hintIndex + 1) % hints.length);
   };
 
+  // Video control functions
+  const handleVideoPlay = (videoId) => {
+    const video = videoRefs.current[videoId];
+    if (video) {
+      if (video.paused) {
+        video.play();
+        setPlayingVideos((prev) => ({ ...prev, [videoId]: true }));
+      } else {
+        video.pause();
+        setPlayingVideos((prev) => ({ ...prev, [videoId]: false }));
+      }
+    }
+  };
+
+  const handleVideoEnded = (videoId) => {
+    const video = videoRefs.current[videoId];
+    if (video) {
+      video.currentTime = 0;
+      setPlayingVideos((prev) => ({ ...prev, [videoId]: false }));
+    }
+  };
+
   // Close modal
   const closeModal = () => {
+    // Pause all videos when closing modal
+    Object.values(videoRefs.current).forEach((video) => {
+      if (video) {
+        video.pause();
+        video.currentTime = 0;
+      }
+    });
+    setPlayingVideos({});
+
     gsap.to(eggRef.current, {
       scale: 0,
       opacity: 0,
@@ -253,6 +314,7 @@ export default function EasterEgg() {
         // Show success message for 2 seconds before closing modal
         setTimeout(() => {
           closeLoginModal();
+          window.location.reload();
         }, 2000);
       } else {
         setLoginError("Login failed. Please try again.");
@@ -473,11 +535,11 @@ export default function EasterEgg() {
                 <div className="flex border-b border-white/10">
                   <button
                     className={`px-4 py-3 text-sm font-medium border-b-2 ${
-                      activeTab === "first-edit"
+                      activeTab === "myFirstEdit"
                         ? "border-red-500 text-red-400"
                         : "border-transparent text-white/50 hover:text-white/80"
                     } transition-colors`}
-                    onClick={() => setActiveTab("first-edit")}
+                    onClick={() => setActiveTab("myFirstEdit")}
                   >
                     {isMobile ? "1st Edit" : "My First Edit"}
                   </button>
@@ -493,11 +555,11 @@ export default function EasterEgg() {
                   </button>
                   <button
                     className={`px-4 py-3 text-sm font-medium border-b-2 ${
-                      activeTab === "behind-scenes"
+                      activeTab === "behindScenes"
                         ? "border-red-500 text-red-400"
                         : "border-transparent text-white/50 hover:text-white/80"
                     } transition-colors`}
-                    onClick={() => setActiveTab("behind-scenes")}
+                    onClick={() => setActiveTab("behindScenes")}
                   >
                     {isMobile ? "BTS" : "Behind Scenes"}
                   </button>
@@ -505,182 +567,424 @@ export default function EasterEgg() {
 
                 {/* Main content area */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-custom">
-                  {activeTab === "first-edit" && (
-                    <div className="mb-8">
-                      <h3 className="text-xl font-semibold text-white mb-4">
-                        {isMobile ? "Beginnings" : "The Humble Beginnings"}
-                      </h3>
-                      <div className="aspect-w-16 aspect-h-9 bg-black rounded-lg overflow-hidden border border-white/10 relative">
-                        <video
-                          className="w-full h-full object-cover"
-                          autoPlay
-                          loop
-                          muted
-                          controls
-                        >
-                          <source
-                            src="/assets/first-edit.mp4"
-                            type="video/mp4"
-                          />
-                        </video>
-                        <div className="absolute bottom-4 left-4 bg-black/80 px-3 py-1 rounded text-sm font-mono z-20 backdrop-blur-sm">
-                          FIRST_EDIT.MP4
-                        </div>
-                      </div>
-                      <p className="text-white/70 mt-4 text-sm">
-                        My first edit - no transitions, no color grading, just
-                        raw footage. I thought lens flares every 5 seconds was
-                        "cinematic".
-                      </p>
+                  {loadingVideos ? (
+                    <div className="flex justify-center items-center h-64">
+                      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
                     </div>
-                  )}
-
-                  {activeTab === "bloopers" && (
-                    <div className="mb-8">
-                      <h3 className="text-xl font-semibold text-white mb-4">
-                        Bloopers Reel
-                      </h3>
-                      <div className="aspect-w-16 aspect-h-9 bg-black rounded-lg overflow-hidden border border-white/10 relative">
-                        <video
-                          className="w-full h-full object-cover"
-                          autoPlay
-                          loop
-                          muted
-                          controls
-                        >
-                          <source src="/assets/bloopers.mp4" type="video/mp4" />
-                        </video>
-                        <div className="absolute bottom-4 left-4 bg-black/80 px-3 py-1 rounded text-sm font-mono z-20 backdrop-blur-sm">
-                          BLOOPERS.MP4
+                  ) : videos.length > 0 ? (
+                    videos.map((video) => (
+                      <div key={video._id} className="mb-8">
+                        <h3 className="text-xl font-semibold text-white mb-4">
+                          {video.title}
+                        </h3>
+                        <div className="aspect-w-16 aspect-h-9 bg-black rounded-lg overflow-hidden border border-white/10 relative">
+                          <video
+                            ref={(el) => (videoRefs.current[video._id] = el)}
+                            className="w-full h-full object-cover"
+                            loop
+                            controls={false}
+                            onClick={() => handleVideoPlay(video._id)}
+                            onEnded={() => handleVideoEnded(video._id)}
+                            poster={video.thumbnailUrl}
+                          >
+                            <source src={video.videoUrl} type="video/mp4" />
+                          </video>
+                          {!playingVideos[video._id] && (
+                            <button
+                              onClick={() => handleVideoPlay(video._id)}
+                              className="absolute inset-0 flex items-center justify-center w-full h-full group"
+                            >
+                              <div className="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center group-hover:bg-black/70 transition-colors">
+                                <svg
+                                  className="w-8 h-8 text-white"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                              </div>
+                            </button>
+                          )}
+                          <div className="absolute bottom-4 text-white left-4 bg-black/80 px-3 py-1 rounded text-sm font-mono z-20 backdrop-blur-sm">
+                            {video.title.toUpperCase().replace(/\s+/g, "_")}.MP4
+                          </div>
                         </div>
+                        <p className="text-white/70 mt-4 text-sm">
+                          {video.description}
+                        </p>
                       </div>
-                      <p className="text-white/70 mt-4 text-sm">
-                        Everyone starts somewhere! My funniest mistakes and
-                        unexpected moments.
-                      </p>
-                    </div>
-                  )}
-
-                  {activeTab === "behind-scenes" && (
-                    <div className="mb-8">
-                      <h3 className="text-xl font-semibold text-white mb-4">
-                        Behind The Scenes
-                      </h3>
-                      <div className="aspect-w-16 aspect-h-9 bg-black rounded-lg overflow-hidden border border-white/10 relative">
-                        <video
-                          className="w-full h-full object-cover"
-                          autoPlay
-                          loop
-                          muted
-                          controls
-                        >
-                          <source
-                            src="/assets/behind-scenes.mp4"
-                            type="video/mp4"
-                          />
-                        </video>
-                        <div className="absolute bottom-4 left-4 bg-black/80 px-3 py-1 rounded text-sm font-mono z-20 backdrop-blur-sm">
-                          MAKING_OF.MP4
-                        </div>
-                      </div>
-                      <p className="text-white/70 mt-4 text-sm">
-                        See how the magic happens - the unglamorous reality
-                        behind the scenes.
-                      </p>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 text-white/50">
+                      No videos found for this category.
                     </div>
                   )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     <div className="bg-black/30 p-4 rounded-lg border border-white/10">
                       <h4 className="text-red-400 font-mono text-xs mb-2">
-                        WHAT I USED
+                        CREATIVE ARSENAL
                       </h4>
                       <ul className="space-y-2 text-sm text-white/80">
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                          Free editing software trial
+                          Hand-me-down DSLR (my first "professional" camera)
                         </li>
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                          Stock footage from YouTube
+                          GarageBand for early audio experiments
                         </li>
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                          Overheating laptop
+                          Free music from YouTube's audio library
                         </li>
                       </ul>
                     </div>
                     <div className="bg-black/30 p-4 rounded-lg border border-white/10">
                       <h4 className="text-red-400 font-mono text-xs mb-2">
-                        WHAT I LEARNED
+                        HARD-WON WISDOM
                       </h4>
                       <ul className="space-y-2 text-sm text-white/80">
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                          Less is more with effects
+                          Audio quality matters more than 4K resolution
                         </li>
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                          Story &gt; flashy transitions
+                          The magic happens in pre-production
                         </li>
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                          Always back up projects
+                          Clients remember feelings, not frame rates
                         </li>
                       </ul>
                     </div>
                   </div>
 
-                  <div className="border-t border-white/10 pt-6">
-                    <h3 className="text-xl font-semibold text-white mb-4">
-                      My Journey
+                  <div className="border-t border-white/10 pt-8">
+                    <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 mb-8">
+                      MY CREATIVE EVOLUTION
                     </h3>
-                    <div className="relative">
-                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-red-500 via-red-500/50 to-transparent"></div>
 
-                      <div className="space-y-6 pl-10">
-                        {[
-                          {
-                            date: "2024",
-                            title: "First Edit",
-                            description: "Discovered lens flares",
-                          },
-                          {
-                            date: "2024",
-                            title: "First Client",
-                            description: "$20 birthday video",
-                          },
-                          {
-                            date: "2024",
-                            title: "Color Grading",
-                            description: "Orange/teal phase",
-                          },
-                          {
-                            date: "2024",
-                            title: "First Wedding",
-                            description: "Learned backups",
-                          },
-                          {
-                            date: "Now",
-                            title: "Present",
-                            description: "Cinematic storytelling",
-                          },
-                        ].map((item, index) => (
-                          <div key={index} className="relative">
-                            <div className="absolute -left-10 top-1 w-6 h-6 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                            </div>
-                            <h4 className="text-white font-medium">
-                              {item.title}
-                              <span className="text-white/50 text-sm ml-2">
-                                {item.date}
-                              </span>
-                            </h4>
-                            <p className="text-white/60 text-sm mt-1">
-                              {item.description}
-                            </p>
+                    {/* Alternate Timeline Design */}
+                    <div className="relative">
+                      {/* Decorative elements */}
+                      <div className="absolute inset-0 pointer-events-none">
+                        <div className="absolute left-8 top-0 h-full w-0.5 bg-gradient-to-b from-transparent via-red-500/30 to-transparent"></div>
+                        <div className="absolute left-0 top-0 h-full w-8 bg-gradient-to-r from-black/80 to-transparent z-10"></div>
+                      </div>
+
+                      {/* Timeline Items */}
+                      <div className="space-y-12 pl-12">
+                        {/* Item 1 */}
+                        <div className="relative group">
+                          <div className="absolute -left-12 top-2 w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-500/20 transition-all duration-300 group-hover:scale-110">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                              ></path>
+                            </svg>
                           </div>
-                        ))}
+
+                          <div className="bg-gradient-to-r from-black/30 to-black/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm hover:border-red-500/30 transition-all duration-300">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-xs font-mono px-2 py-1 rounded bg-red-900/30 text-red-400 border border-red-800/50">
+                                    AWAKENING
+                                  </span>
+                                  <span className="text-xs text-white/50">
+                                    2024
+                                  </span>
+                                </div>
+                                <h4 className="text-lg font-semibold text-white">
+                                  The Classroom Rebellion
+                                </h4>
+                                <p className="text-white/70 text-sm mt-1">
+                                  Found more inspiration in editing event
+                                  footage than attending lectures - the first
+                                  crack in my academic facade
+                                </p>
+                              </div>
+                              <div className="sm:w-32 flex justify-center">
+                                <div className="w-16 h-16 bg-black/50 rounded-lg border border-white/10 flex items-center justify-center">
+                                  <svg
+                                    className="w-8 h-8 text-red-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="1.5"
+                                      d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Item 2 */}
+                        <div className="relative group">
+                          <div className="absolute -left-12 top-2 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20 transition-all duration-300 group-hover:scale-110">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              ></path>
+                            </svg>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-black/30 to-black/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm hover:border-blue-500/30 transition-all duration-300">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-xs font-mono px-2 py-1 rounded bg-blue-900/30 text-blue-400 border border-blue-800/50">
+                                    VALIDATION
+                                  </span>
+                                  <span className="text-xs text-white/50">
+                                    2024
+                                  </span>
+                                </div>
+                                <h4 className="text-lg font-semibold text-white">
+                                  Digital Dropout Skool
+                                </h4>
+                                <p className="text-white/70 text-sm mt-1">
+                                  That MacBook wasn't just a tool - it was proof
+                                  I could build a future outside traditional
+                                  education
+                                </p>
+                              </div>
+                              <div className="sm:w-32 flex justify-center">
+                                <div className="relative">
+                                  <div className="w-16 h-12 bg-gray-800 rounded-lg border border-gray-700 shadow-lg">
+                                    <div className="absolute top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-gray-500 rounded-full"></div>
+                                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-10 h-0.5 bg-gray-900 rounded-full"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center text-[8px] text-gray-400 font-mono">
+                                      MacBook Pro
+                                    </div>
+                                  </div>
+                                  <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[8px] px-1 rounded">
+                                    REWARD
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Item 3 */}
+                        <div className="relative group">
+                          <div className="absolute -left-12 top-2 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-500/20 transition-all duration-300 group-hover:scale-110">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                              ></path>
+                            </svg>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-black/30 to-black/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm hover:border-purple-500/30 transition-all duration-300">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-xs font-mono px-2 py-1 rounded bg-purple-900/30 text-purple-400 border border-purple-800/50">
+                                    GRIND
+                                  </span>
+                                  <span className="text-xs text-white/50">
+                                    2024
+                                  </span>
+                                </div>
+                                <h4 className="text-lg font-semibold text-white">
+                                  The Nocturnal Editor
+                                </h4>
+                                <p className="text-white/70 text-sm mt-1">
+                                  2AM color grading sessions between classes -
+                                  sacrificing sleep for skills that would become
+                                  my career
+                                </p>
+                              </div>
+                              <div className="sm:w-32 flex justify-center">
+                                <div className="w-16 h-16 bg-black/50 rounded-lg border border-white/10 flex items-center justify-center">
+                                  <svg
+                                    className="w-8 h-8 text-purple-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="1.5"
+                                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Item 4 */}
+                        <div className="relative group">
+                          <div className="absolute -left-12 top-2 w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center shadow-lg shadow-green-500/20 transition-all duration-300 group-hover:scale-110">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+                              ></path>
+                            </svg>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-black/30 to-black/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm hover:border-green-500/30 transition-all duration-300">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-xs font-mono px-2 py-1 rounded bg-green-900/30 text-green-400 border border-green-800/50">
+                                    CLARITY
+                                  </span>
+                                  <span className="text-xs text-white/50">
+                                    2024
+                                  </span>
+                                </div>
+                                <h4 className="text-lg font-semibold text-white">
+                                  The Pivot
+                                </h4>
+                                <p className="text-white/70 text-sm mt-1">
+                                  Realized my "side hustle" was actually my main
+                                  hustle - the moment education became
+                                  self-directed
+                                </p>
+                              </div>
+                              <div className="sm:w-32 flex justify-center">
+                                <div className="w-16 h-16 bg-black/50 rounded-lg border border-white/10 flex items-center justify-center">
+                                  <svg
+                                    className="w-8 h-8 text-green-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="1.5"
+                                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                    ></path>
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="1.5"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Item 5 */}
+                        <div className="relative group">
+                          <div className="absolute -left-12 top-2 w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-yellow-700 flex items-center justify-center shadow-lg shadow-yellow-500/20 transition-all duration-300 group-hover:scale-110">
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"
+                              ></path>
+                            </svg>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-black/30 to-black/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm hover:border-yellow-500/30 transition-all duration-300">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-xs font-mono px-2 py-1 rounded bg-yellow-900/30 text-yellow-400 border border-yellow-800/50">
+                                    NOW
+                                  </span>
+                                  <span className="text-xs text-white/50">
+                                    Present
+                                  </span>
+                                </div>
+                                <h4 className="text-lg font-semibold text-white">
+                                  Storytelling Alchemist
+                                </h4>
+                                <p className="text-white/70 text-sm mt-1">
+                                  Transforming raw footage into emotional
+                                  experiences - the hungry student now crafts
+                                  what inspires others
+                                </p>
+                              </div>
+                              <div className="sm:w-32 flex justify-center">
+                                <div className="w-16 h-16 bg-black/50 rounded-lg border border-white/10 flex items-center justify-center">
+                                  <svg
+                                    className="w-8 h-8 text-yellow-400"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth="1.5"
+                                      d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

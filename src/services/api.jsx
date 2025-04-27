@@ -150,7 +150,9 @@ export const uploadFile = async (file) => {
   formData.append("upload_preset", "ml_default"); // Create this in Cloudinary settings
 
   const response = await fetch(
-    "https://api.cloudinary.com/v1_1/dqc2tggps/upload",
+    `https://api.cloudinary.com/v1_1/${
+      import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+    }/upload`,
     {
       method: "POST",
       body: formData,
