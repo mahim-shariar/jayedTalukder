@@ -2,153 +2,118 @@ import { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
+import { getReviews } from "../../services/api";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const testimonials = [
-  {
-    id: 1,
-    name: "Sarah & James",
-    role: "Wedding Clients",
-    quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
-    rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
-  },
-  {
-    id: 2,
-    name: "Alex Rodriguez",
-    role: "Music Video Director",
-    quote:
-      "The color grading work transformed our video into a cinematic masterpiece. Jayed understands mood like no other editor.",
-    rating: 5,
-    reviewImage: "/review-music.jpg",
-    reviewAlt: "Screenshot of music video review",
-  },
-  {
-    id: 3,
-    name: "Maya Chen",
-    role: "Corporate Client",
-    quote:
-      "Our product launch video exceeded all expectations. The motion graphics and pacing were absolutely perfect for our brand.",
-    rating: 5,
-    reviewImage: "/review-corporate.jpg",
-    reviewAlt: "Screenshot of corporate client review",
-  },
-  {
-    id: 4,
-    name: "David Wilson",
-    role: "Documentary Filmmaker",
-    quote:
-      "Jayed's storytelling ability through editing is phenomenal. He found the emotional core of our documentary material.",
-    rating: 5,
-    reviewImage: "/review-doc.jpg",
-    reviewAlt: "Screenshot of documentary review",
-  },
-  {
-    id: 5,
-    name: "Lisa Park",
-    role: "Social Media Influencer",
-    quote:
-      "My engagement tripled after Jayed edited my travel vlogs. His pacing and transitions make even mundane moments exciting.",
-    rating: 5,
-    reviewImage: "/review-social.jpg",
-    reviewAlt: "Screenshot of influencer review",
-  },
-  {
-    id: 6,
-    name: "The Thompson Family",
-    role: "Family Video Clients",
-    quote:
-      "We'll treasure this family reunion video forever. Jayed captured everyone's personalities so beautifully.",
-    rating: 5,
-    reviewImage: "/review-family.jpg",
-    reviewAlt: "Screenshot of family video review",
-  },
-  {
-    id: 7,
-    name: "Ryan Brooks",
-    role: "Commercial Director",
-    quote:
-      "The most professional editor I've worked with. Delivered three perfect versions under impossible deadlines.",
-    rating: 5,
-    reviewImage: "/review-commercial.jpg",
-    reviewAlt: "Screenshot of commercial review",
-  },
-  {
-    id: 8,
-    name: "Nina Patel",
-    role: "Event Videographer",
-    quote:
-      "I outsource all my post-production to Jayed now. Consistent quality that makes my work look better than it is.",
-    rating: 5,
-    reviewImage: "/review-event.jpg",
-    reviewAlt: "Screenshot of event video review",
-  },
-  {
-    id: 9,
-    name: "Marcus Lee",
-    role: "YouTube Creator",
-    quote:
-      "Subscribers keep asking who edits my videos. Jayed's work makes my content look premium without losing authenticity.",
-    rating: 5,
-    reviewImage: "/review-youtube.jpg",
-    reviewAlt: "Screenshot of YouTube review",
-  },
-];
 
 export default function Testimonials() {
   const [showAll, setShowAll] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [expandedCard, setExpandedCard] = useState(null);
+  const [expandedTextCards, setExpandedTextCards] = useState([]);
+  const [expandedScreenshotCards, setExpandedScreenshotCards] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const sectionRef = useRef(null);
   const cardsRef = useRef([]);
   const containerRef = useRef(null);
-  const contentRefs = useRef([]);
+  const textContentRefs = useRef([]);
+  const screenshotContentRefs = useRef([]);
 
-  const toggleExpand = (id, e) => {
+  // Fetch reviews from API
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setLoading(true);
+        const response = await getReviews();
+        setTestimonials(response.data.reviews || []);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message || "Failed to load testimonials");
+        setLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
+
+  const toggleTextExpansion = (id, e) => {
     e.stopPropagation();
-    if (expandedCard === id) {
-      // Collapse animation
-      const index = testimonials.findIndex((t) => t.id === id);
-      gsap.to(contentRefs.current[index], {
+    if (expandedTextCards.includes(id)) {
+      // Collapse text animation
+      const index = testimonials.findIndex((t) => t._id === id);
+      gsap.to(textContentRefs.current[index], {
         height: 0,
         opacity: 0,
         duration: 0.3,
         ease: "power2.in",
-        onComplete: () => setExpandedCard(null),
+        onComplete: () => {
+          setExpandedTextCards(
+            expandedTextCards.filter((cardId) => cardId !== id)
+          );
+        },
       });
     } else {
-      setExpandedCard(id);
+      setExpandedTextCards([...expandedTextCards, id]);
+    }
+  };
+
+  const toggleScreenshot = (id, e) => {
+    e.stopPropagation();
+    if (expandedScreenshotCards.includes(id)) {
+      // Collapse screenshot animation
+      const index = testimonials.findIndex((t) => t._id === id);
+      gsap.to(screenshotContentRefs.current[index], {
+        height: 0,
+        opacity: 0,
+        duration: 0.3,
+        ease: "power2.in",
+        onComplete: () => {
+          setExpandedScreenshotCards(
+            expandedScreenshotCards.filter((cardId) => cardId !== id)
+          );
+        },
+      });
+    } else {
+      setExpandedScreenshotCards([...expandedScreenshotCards, id]);
     }
   };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (expandedCard && !event.target.closest(".testimonial-card")) {
-        const index = testimonials.findIndex((t) => t.id === expandedCard);
-        gsap.to(contentRefs.current[index], {
-          height: 0,
-          opacity: 0,
-          duration: 0.3,
-          ease: "power2.in",
-          onComplete: () => setExpandedCard(null),
+      // Close screenshot if clicked outside
+      if (
+        expandedScreenshotCards.length > 0 &&
+        !event.target.closest(".testimonial-card")
+      ) {
+        expandedScreenshotCards.forEach((id) => {
+          const index = testimonials.findIndex((t) => t._id === id);
+          gsap.to(screenshotContentRefs.current[index], {
+            height: 0,
+            opacity: 0,
+            duration: 0.3,
+            ease: "power2.in",
+            onComplete: () => {
+              setExpandedScreenshotCards(
+                expandedScreenshotCards.filter((cardId) => cardId !== id)
+              );
+            },
+          });
         });
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [expandedCard]);
+  }, [expandedScreenshotCards, testimonials]);
 
-  // Expand animation when card is set to expanded
+  // Expand animations when cards are set to expanded
   useEffect(() => {
-    if (expandedCard) {
-      const index = testimonials.findIndex((t) => t.id === expandedCard);
-      if (index !== -1 && contentRefs.current[index]) {
+    expandedTextCards.forEach((id) => {
+      const index = testimonials.findIndex((t) => t._id === id);
+      if (index !== -1 && textContentRefs.current[index]) {
         gsap.fromTo(
-          contentRefs.current[index],
+          textContentRefs.current[index],
           { height: 0, opacity: 0 },
           {
             height: "auto",
@@ -158,11 +123,31 @@ export default function Testimonials() {
           }
         );
       }
-    }
-  }, [expandedCard]);
+    });
+  }, [expandedTextCards, testimonials]);
+
+  useEffect(() => {
+    expandedScreenshotCards.forEach((id) => {
+      const index = testimonials.findIndex((t) => t._id === id);
+      if (index !== -1 && screenshotContentRefs.current[index]) {
+        gsap.fromTo(
+          screenshotContentRefs.current[index],
+          { height: 0, opacity: 0 },
+          {
+            height: "auto",
+            opacity: 1,
+            duration: 0.4,
+            ease: "power2.out",
+          }
+        );
+      }
+    });
+  }, [expandedScreenshotCards, testimonials]);
 
   // Initial animations
   useEffect(() => {
+    if (testimonials.length === 0 || loading) return;
+
     const ctx = gsap.context(() => {
       gsap.set(cardsRef.current, { opacity: 1, y: 0 });
 
@@ -186,7 +171,7 @@ export default function Testimonials() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [showAll, isInitialLoad]);
+  }, [showAll, isInitialLoad, testimonials, loading]);
 
   const renderStars = (count) => {
     return Array(count)
@@ -203,13 +188,32 @@ export default function Testimonials() {
       ));
   };
 
+  const truncateContent = (content, id) => {
+    if (!content) return "No review content available";
+
+    const maxLength = 200;
+    if (content.length <= maxLength || expandedTextCards.includes(id)) {
+      return content;
+    }
+
+    return `${content.substring(0, maxLength)}...`;
+  };
+
+  if (error) {
+    return (
+      <section className="min-h-screen py-24 bg-[#0a0a0a] text-white relative overflow-hidden flex items-center justify-center">
+        <div className="text-center text-red-400">Error: {error}</div>
+      </section>
+    );
+  }
+
   return (
     <section
       ref={sectionRef}
       id="testimonials"
       className="min-h-screen py-24 bg-[#0a0a0a] text-white relative overflow-hidden"
     >
-      {/* Background elements matching your design */}
+      {/* Background elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a] z-0"></div>
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-15 pointer-events-none z-10"></div>
@@ -244,125 +248,212 @@ export default function Testimonials() {
         </div>
 
         {/* Testimonials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {(showAll ? testimonials : testimonials.slice(0, 6)).map(
-            (testimonial, index) => (
-              <div
-                key={testimonial.id}
-                ref={(el) => (cardsRef.current[index] = el)}
-                className="testimonial-card opacity-100"
-              >
-                <div
-                  className={`h-full flex flex-col bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] border border-white/5 rounded-xl relative overflow-hidden group transition-all duration-300 ${
-                    expandedCard === testimonial.id ? "!border-red-500/50" : ""
-                  }`}
-                >
-                  {/* Main card content */}
-                  <div className="p-8">
-                    <div className="flex mb-4">
-                      {renderStars(testimonial.rating)}
-                    </div>
-
-                    <div className="flex-grow mb-6">
-                      <blockquote className="text-white/80 italic text-lg relative">
-                        <span className="absolute top-0 left-0 text-red-500/30 text-7xl font-serif -mt-2 -ml-1">
-                          "
-                        </span>
-                        <span className="relative z-10 pl-6">
-                          {testimonial.quote}
-                        </span>
-                      </blockquote>
-                    </div>
-
-                    <div className="mt-auto pt-4 border-t border-white/5">
-                      <p className="text-red-400 font-medium">
-                        {testimonial.name}
-                      </p>
-                      <p className="text-white/50 text-sm">
-                        {testimonial.role}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Expand button */}
-                  <button
-                    onClick={(e) => toggleExpand(testimonial.id, e)}
-                    className="w-full py-3 bg-black/30 border-t border-white/5 text-red-400 hover:bg-black/40 transition-all duration-300 flex items-center justify-center group"
-                  >
-                    <span>
-                      {expandedCard === testimonial.id
-                        ? "Hide Review"
-                        : "Show Actual Review"}
-                    </span>
-                    <svg
-                      className={`w-5 h-5 ml-2 transition-transform duration-300 ${
-                        expandedCard === testimonial.id ? "rotate-180" : ""
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  </button>
-
-                  {/* Expandable content with transition */}
+        {loading ? (
+          <div className="flex justify-center items-center h-72">
+            <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : testimonials.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+              {(showAll ? testimonials : testimonials.slice(0, 6)).map(
+                (testimonial, index) => (
                   <div
-                    ref={(el) => (contentRefs.current[index] = el)}
-                    className="overflow-hidden"
-                    style={{ height: 0, opacity: 0 }}
+                    key={testimonial._id}
+                    ref={(el) => (cardsRef.current[index] = el)}
+                    className="testimonial-card opacity-100"
                   >
-                    <div className="p-4 bg-black/20">
-                      <div className="relative aspect-video rounded-md overflow-hidden border border-white/10">
-                        <img
-                          src={testimonial.reviewImage}
-                          alt={testimonial.reviewAlt}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
-                        <div className="absolute bottom-2 left-2 text-xs bg-black/70 px-2 py-1 rounded">
-                          Actual client review
+                    <div
+                      className={`h-full flex flex-col bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] border border-white/5 rounded-xl relative overflow-hidden group transition-all duration-300 ${
+                        expandedScreenshotCards.includes(testimonial._id)
+                          ? "!border-red-500/50"
+                          : ""
+                      }`}
+                    >
+                      {/* Main card content */}
+                      <div className="p-8">
+                        <div className="flex mb-4">
+                          {renderStars(testimonial.rating || 5)}
+                        </div>
+
+                        <div className="flex-grow mb-6">
+                          <blockquote className="text-white/80 italic text-lg relative">
+                            <span className="absolute top-0 left-0 text-red-500/30 text-7xl font-serif -mt-2 -ml-1">
+                              "
+                            </span>
+                            <div className="relative z-10 pl-6">
+                              <div>
+                                {truncateContent(
+                                  testimonial.content,
+                                  testimonial._id
+                                )}
+                              </div>
+                              {/* Expanded text content with transition */}
+                              <div
+                                ref={(el) =>
+                                  (textContentRefs.current[index] = el)
+                                }
+                                className="overflow-hidden"
+                                style={{ height: 0, opacity: 0 }}
+                              >
+                                <div className="pt-2">
+                                  {testimonial.content}
+                                </div>
+                              </div>
+                            </div>
+                          </blockquote>
+                        </div>
+
+                        {/* Read More button (only show if content is truncated) */}
+                        {testimonial.content &&
+                          testimonial.content.length > 200 && (
+                            <div className="mt-4">
+                              <button
+                                onClick={(e) =>
+                                  toggleTextExpansion(testimonial._id, e)
+                                }
+                                className="text-red-400 hover:text-red-300 text-sm flex items-center"
+                              >
+                                {expandedTextCards.includes(testimonial._id)
+                                  ? "Read less"
+                                  : "Read more"}
+                                <svg
+                                  className={`w-4 h-4 ml-1 transition-transform ${
+                                    expandedTextCards.includes(testimonial._id)
+                                      ? "rotate-180"
+                                      : ""
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M19 9l-7 7-7-7"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+
+                        <div className="mt-auto pt-4 border-t border-white/5">
+                          <p className="text-red-400 font-medium">
+                            {testimonial.userName ||
+                              testimonial.user?.name ||
+                              "Anonymous"}
+                          </p>
+                          <p className="text-white/50 text-sm">
+                            {testimonial.createdAt
+                              ? new Date(
+                                  testimonial.createdAt
+                                ).toLocaleDateString()
+                              : ""}
+                          </p>
                         </div>
                       </div>
-                      <div className="mt-3 text-xs text-white/60 text-center">
-                        Click outside to close
-                      </div>
+
+                      {/* Expand button - only show if screenshot exists */}
+                      {testimonial.screenshot && (
+                        <>
+                          <button
+                            onClick={(e) =>
+                              toggleScreenshot(testimonial._id, e)
+                            }
+                            className="w-full py-3 bg-black/30 border-t border-white/5 text-red-400 hover:bg-black/40 transition-all duration-300 flex items-center justify-center group"
+                          >
+                            <span>
+                              {expandedScreenshotCards.includes(testimonial._id)
+                                ? "Hide Actual Review"
+                                : "Show Actual Review"}
+                            </span>
+                            <svg
+                              className={`w-5 h-5 ml-2 transition-transform duration-300 ${
+                                expandedScreenshotCards.includes(
+                                  testimonial._id
+                                )
+                                  ? "rotate-180"
+                                  : ""
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </button>
+
+                          {/* Expandable screenshot content with transition */}
+                          <div
+                            ref={(el) =>
+                              (screenshotContentRefs.current[index] = el)
+                            }
+                            className="overflow-hidden"
+                            style={{ height: 0, opacity: 0 }}
+                          >
+                            <div className="p-4 bg-black/20">
+                              <div className="relative aspect-video rounded-md overflow-hidden border border-white/10">
+                                <img
+                                  src={testimonial.screenshot}
+                                  alt={`Review from ${
+                                    testimonial.userName ||
+                                    testimonial.user?.name ||
+                                    "Anonymous"
+                                  }`}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+                                <div className="absolute bottom-2 left-2 text-xs bg-black/70 px-2 py-1 rounded">
+                                  Actual client review
+                                </div>
+                              </div>
+                              <div className="mt-3 text-xs text-white/60 text-center">
+                                Click outside to close
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                </div>
-              </div>
-            )
-          )}
-        </div>
+                )
+              )}
+            </div>
 
-        {/* Show All Button */}
-        {!showAll && testimonials.length > 6 && (
-          <div className="text-center mt-8">
-            <button
-              onClick={() => setShowAll(true)}
-              className="px-8 py-3 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-white transition-all duration-300 rounded-lg flex items-center mx-auto group"
-            >
-              <span>Show All Testimonials</span>
-              <svg
-                className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+            {/* Show All Button */}
+            {!showAll && testimonials.length > 6 && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => setShowAll(true)}
+                  className="px-8 py-3 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-white transition-all duration-300 rounded-lg flex items-center mx-auto group"
+                >
+                  <span>Show All Testimonials</span>
+                  <svg
+                    className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center text-white/50 py-16">
+            No testimonials available yet.
           </div>
         )}
       </div>
