@@ -1,10 +1,13 @@
 import { useRef, useState, useEffect } from "react";
 import { gsap } from "gsap";
+import { motion } from "framer-motion";
+import { login } from "../../services/api";
 
 export default function EasterEgg() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const lockRef = useRef(null);
   const eggRef = useRef(null);
   const riddleRef = useRef(null);
@@ -13,6 +16,15 @@ export default function EasterEgg() {
   const [activeTab, setActiveTab] = useState("first-edit");
   const [currentHint, setCurrentHint] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+
+  // Login state
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+  });
+  const [loginError, setLoginError] = useState(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Riddle configuration
   const riddles = [
@@ -34,6 +46,66 @@ export default function EasterEgg() {
         "Editors spend hours with me",
         "I'm linear but can be manipulated",
         "I live inside your editing software",
+      ],
+    },
+    {
+      question:
+        "I shift the skies and paint the air,Four faces I wear, none ever rare.Not in plain sight, yet close to you—Crack my rhythm to find what's true. Who am I?",
+      answer: "ritu",
+      hints: [
+        "I come and go, but always return—like a cycle written by nature.",
+        "My name hides in the seasons' song, known best to poets and lovers.",
+        "Look beyond the weather—I'm also the one your heart answers to.",
+      ],
+    },
+    {
+      question:
+        "I speak without a mouth and hear without ears. I have no body, but I come alive with movement. What am I?",
+      answer: "echo",
+      hints: [
+        "I'm often found in mountains or caves",
+        "I'm your own voice, coming back",
+        "You call, I answer—but never first",
+      ],
+    },
+    {
+      question:
+        "I'm not alive, but I grow. I don't have lungs, but I need air. I don't have a mouth, but water kills me. What am I?",
+      answer: "fire",
+      hints: [
+        "I dance in the dark but disappear in rain",
+        "I warm your hands but can destroy homes",
+        "Without me, there's no light in the wild",
+      ],
+    },
+    {
+      question:
+        "I hide in code and dance in light, you see me in dreams or deep at night. I'm not real, but I feel true—what am I to you?",
+      answer: "illusion",
+      hints: [
+        "I live in magic, mirrors, and minds",
+        "Sometimes I'm beauty, sometimes I lie",
+        "I blur the line between real and fake",
+      ],
+    },
+    {
+      question:
+        "You'll find me in hearts, yet I'm not blood. I'm said in silence, felt more than seen. What am I?",
+      answer: "love",
+      hints: [
+        "I'm stronger than time but weigh nothing",
+        "Poets chase me, fighters fight for me",
+        "I'm often broken, but never truly gone",
+      ],
+    },
+    {
+      question:
+        "I'm made to be shared but often kept secret. Once I'm told, I'm no longer mine. What am I?",
+      answer: "secret",
+      hints: [
+        "You whisper me when no one's near",
+        "I can destroy or deepen trust",
+        "One word from you, and I'm free",
       ],
     },
   ];
@@ -106,7 +178,12 @@ export default function EasterEgg() {
         borderColor: "rgba(16, 185, 129, 0.5)",
         duration: 0.5,
         onComplete: () => {
-          unlockEgg();
+          // Special case for the "ritu" riddle (index 2)
+          if (currentRiddle === 2) {
+            setShowLoginModal(true);
+          } else {
+            unlockEgg();
+          }
           setShowRiddle(false);
         },
       });
@@ -145,6 +222,58 @@ export default function EasterEgg() {
         setIsUnlocked(false);
       },
     });
+  };
+
+  // Login handlers
+  const handleLoginChange = (e) => {
+    const { name, value } = e.target;
+    setLoginData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setLoginError(null);
+    setIsLoggingIn(true);
+
+    try {
+      const response = await login({
+        email: loginData.email,
+        password: loginData.password,
+      });
+
+      // Handle successful login
+      console.log(response);
+      if (response && response.token) {
+        localStorage.setItem("token", response.token);
+        setLoginSuccess(true);
+
+        // Show success message for 2 seconds before closing modal
+        setTimeout(() => {
+          closeLoginModal();
+        }, 2000);
+      } else {
+        setLoginError("Login failed. Please try again.");
+      }
+    } catch (err) {
+      setLoginError(
+        err.response?.data?.message || "Login failed. Please try again."
+      );
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  // Close login modal
+  const closeLoginModal = () => {
+    setShowLoginModal(false);
+    setUserAnswer("");
+    setCurrentHint(null);
+    setHintIndex(0);
+    setLoginData({ email: "", password: "" });
+    setLoginError(null);
   };
 
   // Set up scroll listener
@@ -565,6 +694,287 @@ export default function EasterEgg() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Login Modal - shown when "ritu" riddle is solved */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          {/* Success notification */}
+          {loginSuccess && (
+            <motion.div
+              className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-green-500/90 text-white px-6 py-3 rounded-lg shadow-lg flex items-center z-50"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+              Login successful! Redirecting...
+            </motion.div>
+          )}
+
+          <motion.section
+            className="max-h-screen my-10 py-24 bg-[#0a0a0a] text-white relative overflow-hidden w-full max-w-2xl rounded-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* Back button */}
+            <motion.button
+              onClick={closeLoginModal}
+              className="absolute top-6 left-6 z-30 flex items-center justify-center p-2 rounded-full bg-black/30 border border-white/10 hover:border-red-500 transition-all duration-300"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <svg
+                className="w-6 h-6 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </motion.button>
+
+            {/* Background elements */}
+            <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a] z-0"></div>
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-15 pointer-events-none z-10"></div>
+
+            {/* Content container */}
+            <div className="container mx-auto px-4 relative z-20 flex items-center justify-center h-full">
+              <motion.div
+                className="login-form w-full max-w-md"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              >
+                {/* Terminal-style header */}
+                <motion.div
+                  className="text-center mb-10"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.6 }}
+                >
+                  <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-red-600 mb-2">
+                    EDITOR LOGIN
+                  </h2>
+                  <div className="font-mono text-red-400/80 text-sm">
+                    <span>Jayed&gt; _ Access your projects dashboard</span>
+                    <span className="ml-1 animate-pulse">_</span>
+                  </div>
+                </motion.div>
+
+                {/* Login form */}
+                <motion.div
+                  className="bg-gradient-to-b from-[#0f0f0f] to-[#1a1a1a] border border-white/10 rounded-xl p-8 relative overflow-hidden group"
+                  whileHover={{
+                    boxShadow: "0 0 30px rgba(239, 68, 68, 0.1)",
+                  }}
+                >
+                  {/* Glow effect */}
+                  <motion.div
+                    className="absolute inset-0 -z-10 opacity-0 group-hover:opacity-100"
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="absolute -inset-4 bg-gradient-to-br from-red-500/20 via-transparent to-red-500/10 blur-lg rounded-xl"></div>
+                  </motion.div>
+
+                  <form onSubmit={handleLoginSubmit}>
+                    <div className="space-y-6">
+                      {/* Email field */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3, duration: 0.5 }}
+                      >
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-mono text-red-400 mb-2"
+                        >
+                          EMAIL_ADDRESS
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            value={loginData.email}
+                            onChange={handleLoginChange}
+                            className="w-full bg-black/30 border border-white/10 focus:border-red-500/50 rounded-lg px-4 py-3 text-white placeholder-white/30 font-mono text-sm transition-all duration-300"
+                            placeholder="editor@jayed.com"
+                            required
+                          />
+                          <div className="absolute right-3 top-3 text-white/30">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Password field */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4, duration: 0.5 }}
+                      >
+                        <label
+                          htmlFor="password"
+                          className="block text-sm font-mono text-red-400 mb-2"
+                        >
+                          PASSWORD
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            value={loginData.password}
+                            onChange={handleLoginChange}
+                            className="w-full bg-black/30 border border-white/10 focus:border-red-500/50 rounded-lg px-4 py-3 text-white placeholder-white/30 font-mono text-sm transition-all duration-300"
+                            placeholder="••••••••"
+                            required
+                          />
+                          <div className="absolute right-3 top-3 text-white/30">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Error message */}
+                      {loginError && (
+                        <motion.div
+                          className="text-red-400 text-sm"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                        >
+                          {loginError}
+                        </motion.div>
+                      )}
+
+                      {/* Submit button */}
+                      <motion.button
+                        type="submit"
+                        className="w-full flex justify-center items-center py-3 px-4 border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-white transition-all duration-300 rounded-lg"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6, duration: 0.5 }}
+                        disabled={isLoggingIn}
+                      >
+                        {isLoggingIn ? (
+                          <>
+                            <svg
+                              className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            Login
+                            <svg
+                              className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                              />
+                            </svg>
+                          </>
+                        )}
+                      </motion.button>
+                    </div>
+                  </form>
+                </motion.div>
+
+                {/* Sign up link */}
+                <motion.div
+                  className="mt-6 text-center text-sm text-white/60"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.9, duration: 0.5 }}
+                >
+                  <span>Need an editor account? </span>
+                  <a
+                    href="#"
+                    className="font-mono text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Request access
+                  </a>
+                </motion.div>
+              </motion.div>
+            </div>
+
+            {/* Corner accents */}
+            <div className="absolute top-0 left-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -z-10"></div>
+          </motion.section>
         </div>
       )}
     </div>

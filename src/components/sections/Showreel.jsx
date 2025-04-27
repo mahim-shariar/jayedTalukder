@@ -1,25 +1,29 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiPlay,
   FiX,
-  FiChevronLeft,
   FiChevronRight,
   FiFilm,
-  FiSliders,
+  FiExternalLink,
 } from "react-icons/fi";
 import {
   FaHeart,
   FaMoneyBillWave,
   FaGlobeAmericas,
   FaAward,
+  FaMosque,
+  FaPodcast,
 } from "react-icons/fa";
+import { getVideoReels, getVideoReelsByCategory } from "../../services/api";
 
 const Showreel = () => {
   const [activeCategory, setActiveCategory] = useState("all");
-  const [showComparison, setShowComparison] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentVideo, setCurrentVideo] = useState(null);
+  const [hoveredCard, setHoveredCard] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [projects, setProjects] = useState([]);
   const videoRefs = useRef({});
 
   // Categories with React Icons
@@ -49,75 +53,119 @@ const Showreel = () => {
       name: "Short Films",
       icon: <FaAward className="inline mr-2" />,
     },
-  ];
-
-  // Sample projects data
-  const projects = [
     {
-      id: 1,
-      title: "Mountain Elopement",
-      category: "wedding",
-      video: "/reels/wedding-1.mp4",
-      thumbnail: "/thumbnails/wedding-1.jpg",
-      before: "/before/wedding-1.jpg",
-      after: "/after/wedding-1.jpg",
-      color: "#f43f5e",
-      tags: ["Romantic", "Cinematic", "4K"],
+      id: "islamic",
+      name: "Islamic",
+      icon: <FaMosque className="inline mr-2" />,
     },
     {
-      id: 2,
-      title: "Cityscape Commercial",
-      category: "commercial",
-      video: "/reels/commercial-1.mp4",
-      thumbnail: "/thumbnails/commercial-1.jpg",
-      before: "/before/commercial-1.jpg",
-      after: "/after/commercial-1.jpg",
-      color: "#3b82f6",
-      tags: ["Dynamic", "Product", "Drone"],
-    },
-    {
-      id: 3,
-      title: "Tropical Getaway",
-      category: "travel",
-      video: "/reels/travel-1.mp4",
-      thumbnail: "/thumbnails/travel-1.jpg",
-      before: "/before/travel-1.jpg",
-      after: "/after/travel-1.jpg",
-      color: "#10b981",
-      tags: ["Adventure", "Scenic", "4K"],
-    },
-    {
-      id: 4,
-      title: "Artistic Short",
-      category: "shortfilm",
-      video: "/reels/shortfilm-1.mp4",
-      thumbnail: "/thumbnails/shortfilm-1.jpg",
-      before: "/before/shortfilm-1.jpg",
-      after: "/after/shortfilm-1.jpg",
-      color: "#8b5cf6",
-      tags: ["Experimental", "Narrative", "Award-winning"],
+      id: "podcast",
+      name: "Podcast",
+      icon: <FaPodcast className="inline mr-2" />,
     },
   ];
 
-  // Filter projects
-  const filteredProjects =
-    activeCategory === "all"
-      ? projects
-      : projects.filter((project) => project.category === activeCategory);
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { y: 40, opacity: 0, scale: 0.98 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+    hover: {
+      y: -8,
+      transition: {
+        duration: 0.6,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
+  const thumbnailVariants = {
+    hover: {
+      scale: 1.03,
+      transition: {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
+  // Fetch videos from API
+  const fetchVideos = async (category = "all") => {
+    try {
+      setLoading(true);
+      let response;
+
+      if (category === "all") {
+        response = await getVideoReels();
+      } else {
+        response = await getVideoReelsByCategory(category);
+      }
+
+      const videos = response.data.videoReels.map((video) => ({
+        id: video._id,
+        title: video.title,
+        category: video.category,
+        video: video.videoUrl,
+        thumbnail: video.thumbnailUrl || "/default-thumbnail.jpg",
+        color: getRandomColor(),
+        tags: video.tags || [],
+        year: new Date(video.createdAt).getFullYear().toString(),
+        description: video.description || "",
+      }));
+
+      setProjects(videos);
+    } catch (error) {
+      console.error("Failed to fetch videos:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load and category change handler
+  useEffect(() => {
+    fetchVideos(activeCategory);
+  }, [activeCategory]);
+
+  // Helper function to generate random colors
+  const getRandomColor = () => {
+    const colors = [
+      "#f43f5e", // rose-500
+      "#3b82f6", // blue-500
+      "#10b981", // emerald-500
+      "#f59e0b", // amber-500
+      "#8b5cf6", // violet-500
+      "#ec4899", // pink-500
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
 
   const playVideo = (project) => {
     setCurrentVideo(project);
     setIsPlaying(true);
-
     setTimeout(() => {
       if (videoRefs.current[project.id]) {
         videoRefs.current[project.id].currentTime = 0;
-        const playPromise = videoRefs.current[project.id].play();
-        if (playPromise !== undefined) {
-          playPromise.catch((error) => {
-            console.error("Video play failed:", error);
-          });
-        }
+        videoRefs.current[project.id]
+          .play()
+          .catch((error) => console.error("Video play failed:", error));
       }
     }, 100);
   };
@@ -130,219 +178,112 @@ const Showreel = () => {
     setCurrentVideo(null);
   };
 
-  const handleComparisonSliderChange = (e, projectId) => {
-    const value = e.target.value;
-    const afterElement = document.querySelector(
-      `.comparison-after[data-project-id="${projectId}"]`
-    );
-    if (afterElement) {
-      afterElement.style.clipPath = `polygon(0 0, ${value}% 0, ${value}% 100%, 0 100%)`;
-    }
-  };
-
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
-      },
-    },
-  };
-
-  const cardVariants = {
-    hidden: { y: 50, opacity: 0, scale: 0.95 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.1, 0.25, 1],
-      },
-    },
-    hover: {
-      y: -5,
-      boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
-      transition: { duration: 0.3 },
-    },
-  };
-
-  const filmReelVariants = {
-    hidden: { rotate: -360, opacity: 0 },
-    visible: {
-      rotate: 0,
-      opacity: 1,
-      transition: {
-        type: "spring",
-        damping: 10,
-        stiffness: 100,
-        mass: 1.5,
-      },
-    },
-  };
-
-  const playButtonVariants = {
-    initial: { scale: 0.8, opacity: 0.7 },
-    hover: { scale: 1.1, opacity: 1, transition: { duration: 0.3 } },
-  };
-
-  const infoVariants = {
-    initial: { y: 0 },
-    hover: { y: -5, transition: { duration: 0.3 } },
-  };
-
-  const tagsVariants = {
-    initial: { opacity: 0, y: 10 },
-    hover: { opacity: 1, y: 0, transition: { duration: 0.4 } },
-  };
-
   return (
     <section
-      className="showreel-section py-20 bg-gray-950 relative overflow-hidden"
+      className="showreel-section py-24 bg-gray-950 relative overflow-hidden"
       id="showreel"
     >
-      {/* Animated background elements */}
+      {/* Background elements */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a]"></div>
-        <div className="absolute inset-0 bg-[url('/assets/grid-pattern.svg')] bg-repeat opacity-10"></div>
-
-        {/* Moving gradient lights */}
         <motion.div
-          className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full bg-red-500/10 blur-[100px]"
-          animate={{
-            x: [0, 100, -50, 0],
-            y: [0, -50, 100, 0],
-          }}
-          transition={{
-            duration: 15,
-            repeat: Infinity,
-            ease: "linear",
-          }}
+          className="absolute inset-0 bg-gradient-to-br from-black via-[#0a0a0a] to-[#111111]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
         />
-        <motion.div
-          className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-blue-500/10 blur-[120px]"
-          animate={{
-            x: [0, -100, 50, 0],
-            y: [0, 50, -100, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-      </div>
-
-      {/* Floating particles */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-0.5 h-0.5 bg-white/20 rounded-full"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              scale: `${0.5 + Math.random() * 3}`,
-            }}
-            animate={{
-              y: [0, -100, -200, -300],
-              x: [
-                0,
-                Math.random() * 100 - 50,
-                Math.random() * 100 - 50,
-                Math.random() * 100 - 50,
-              ],
-              opacity: [0.2, 1, 1, 0],
-            }}
-            transition={{
-              duration: 8 + Math.random() * 15,
-              repeat: Infinity,
-              repeatDelay: Math.random() * 5,
-              ease: "linear",
-            }}
-          />
-        ))}
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        {/* Header with film reel animation */}
+        {/* Header */}
         <motion.div
-          className="flex flex-col md:flex-row justify-between items-center mb-16"
-          initial="hidden"
-          whileInView="visible"
+          className="flex flex-col md:flex-row justify-between items-center mb-20"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
+          transition={{
+            duration: 0.8,
+            ease: [0.16, 1, 0.3, 1],
+            delay: 0.2,
+          }}
         >
-          <motion.h2
-            className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-6 md:mb-0"
-            variants={itemVariants}
-          >
-            <FiFilm className="inline mr-3 -mt-2" />
-            SHOW<span className="text-white">REEL</span>
-          </motion.h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 mb-6 md:mb-0">
+            <motion.span
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{
+                duration: 0.8,
+                ease: [0.16, 1, 0.3, 1],
+                delay: 0.3,
+              }}
+            >
+              SHOW<span className="text-white">REEL</span>
+            </motion.span>
+          </h2>
 
           <motion.div
-            className="w-24 h-24 flex items-center justify-center"
-            variants={filmReelVariants}
-            whileHover={{ rotate: 45 }}
+            className="w-20 h-20 flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              type: "spring",
+              damping: 10,
+              stiffness: 100,
+              mass: 0.5,
+              delay: 0.4,
+            }}
+            whileHover={{ rotate: 15, scale: 1.05 }}
           >
-            <svg
-              className="w-full h-full text-red-500"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <circle cx="12" cy="12" r="10" strokeDasharray="24" />
-              <circle cx="12" cy="12" r="3" fill="currentColor" />
-              <line x1="12" y1="22" x2="12" y2="19" />
-              <line x1="12" y1="5" x2="12" y2="2" />
-              <line x1="22" y1="12" x2="19" y2="12" />
-              <line x1="5" y1="12" x2="2" y2="12" />
-              <line x1="19.07" y1="19.07" x2="16.95" y2="16.95" />
-              <line x1="7.05" y1="7.05" x2="4.93" y2="4.93" />
-              <line x1="19.07" y1="4.93" x2="16.95" y2="7.05" />
-              <line x1="7.05" y1="16.95" x2="4.93" y2="19.07" />
-            </svg>
+            <div className="relative w-full h-full">
+              <motion.div
+                className="absolute inset-0 rounded-full border-2 border-red-500/20"
+                animate={{ rotate: 360 }}
+                transition={{
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              />
+              <FiFilm className="absolute inset-0 m-auto w-6 h-6 text-red-400" />
+            </div>
           </motion.div>
         </motion.div>
 
         {/* Category tabs */}
         <motion.div
-          className="categories-container flex overflow-x-auto pb-6 mb-12 scrollbar-hide"
+          className="categories-container flex overflow-x-auto pb-10 mb-14 scrollbar-hide"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={containerVariants}
         >
-          <div className="flex space-x-2 mx-auto">
+          <div className="flex space-x-3 mx-auto">
             {categories.map((category, i) => (
               <motion.button
                 key={category.id}
                 onClick={() => setActiveCategory(category.id)}
-                className={`category-tab px-6 py-3 rounded-full flex items-center whitespace-nowrap ${
+                className={`category-tab px-5 py-2.5 rounded-full flex items-center whitespace-nowrap transition-all ${
                   activeCategory === category.id
-                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30"
-                    : "bg-gray-800/50 text-white/80 hover:bg-gray-700/50 backdrop-blur-sm border border-white/10 hover:border-red-500/30"
+                    ? "bg-gradient-to-r from-red-500/90 to-red-600/90 text-white shadow-lg shadow-red-500/20"
+                    : "bg-gray-800/20 text-white/80 hover:bg-gray-700/30 backdrop-blur-sm border border-white/5 hover:border-red-500/20"
                 }`}
-                variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                custom={i}
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    transition: {
+                      duration: 0.6,
+                      ease: [0.16, 1, 0.3, 1],
+                      delay: i * 0.1,
+                    },
+                  },
+                }}
+                whileHover={{
+                  scale: 1.05,
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                  transition: { duration: 0.3 },
+                }}
+                whileTap={{ scale: 0.98 }}
               >
                 {category.icon}
                 {category.name}
@@ -352,175 +293,202 @@ const Showreel = () => {
         </motion.div>
 
         {/* Projects grid */}
-        <motion.div
-          className="projects-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          variants={containerVariants}
-        >
-          {filteredProjects.map((project, i) => (
-            <motion.div
-              key={project.id}
-              className="project-card group relative rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300 bg-gray-900/30 backdrop-blur-sm"
-              variants={cardVariants}
-              initial="hidden"
-              whileInView="visible"
-              whileHover="hover"
-              viewport={{ once: true, margin: "-50px" }}
-              custom={i}
-            >
-              {/* Thumbnail */}
-              <div className="thumbnail-container relative h-80 overflow-hidden">
-                <div
-                  className="thumbnail w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                  style={{
-                    backgroundImage: `url(${project.thumbnail})`,
+        {loading ? (
+          <div className="flex justify-center items-center h-72">
+            <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : projects.length > 0 ? (
+          <motion.div
+            className="projects-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={containerVariants}
+          >
+            {projects.map((project, i) => (
+              <motion.div
+                key={project.id}
+                className="project-card group relative rounded-xl overflow-hidden"
+                variants={cardVariants}
+                initial="hidden"
+                whileInView="visible"
+                whileHover="hover"
+                viewport={{ once: true, margin: "-50px" }}
+                custom={i}
+                onHoverStart={() => setHoveredCard(project.id)}
+                onHoverEnd={() => setHoveredCard(null)}
+              >
+                <motion.div
+                  className="relative h-full w-full rounded-xl overflow-hidden border border-white/5 bg-gray-900/30 backdrop-blur-sm"
+                  initial={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)" }}
+                  whileHover={{
+                    boxShadow: "0 8px 32px rgba(239, 68, 68, 0.2)",
+                    backgroundColor: "rgba(30, 30, 30, 0.5)",
+                    transition: { duration: 0.6 },
                   }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <motion.button
-                      onClick={() => playVideo(project)}
-                      className=" bg-red-500 w-16 h-16 rounded-full flex items-center justify-center shadow-lg hover:bg-red-600 transition-all"
-                      variants={playButtonVariants}
-                      initial="initial"
-                      whileHover="hover"
+                  <motion.div
+                    className="thumbnail-container relative h-72 overflow-hidden"
+                    variants={thumbnailVariants}
+                    whileHover="hover"
+                  >
+                    <div
+                      className="thumbnail w-full h-full bg-cover bg-center"
+                      style={{
+                        backgroundImage: `url(${project.thumbnail})`,
+                      }}
                     >
-                      <FiPlay className="text-2xl text-white ml-1" />
-                    </motion.button>
-                  </div>
-                </div>
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-80"
+                        initial={{ opacity: 0 }}
+                        whileHover={{ opacity: 0.8 }}
+                        transition={{ duration: 0.6 }}
+                      />
+                    </div>
 
-                {/* Project tags */}
-                <motion.div
-                  className="project-tags absolute top-4 left-4 flex flex-wrap gap-2"
-                  variants={tagsVariants}
-                  initial="initial"
-                  whileHover="hover"
-                >
-                  {project.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="text-xs px-2 py-1 rounded-full bg-black/80 backdrop-blur-sm border border-white/10"
+                    <motion.div
+                      className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-mono border border-white/5"
+                      initial={{ y: -10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{
+                        delay: 0.2 + i * 0.05,
+                        duration: 0.6,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
                       style={{ color: project.color }}
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </motion.div>
+                      {project.year}
+                    </motion.div>
 
-                {/* Project color accent */}
-                <div
-                  className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-transparent via-current to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  style={{ color: project.color }}
-                />
-              </div>
+                    <motion.button
+                      onClick={() => playVideo(project)}
+                      className="absolute inset-0 m-auto bg-red-500 w-14 h-14 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      whileHover={{
+                        scale: 1.1,
+                        boxShadow: "0 0 0 8px rgba(239, 68, 68, 0.2)",
+                        transition: {
+                          type: "spring",
+                          stiffness: 400,
+                          damping: 10,
+                        },
+                      }}
+                      whileInView={{
+                        scale: 1,
+                        opacity: 1,
+                        transition: {
+                          delay: 0.3 + i * 0.1,
+                          duration: 0.6,
+                        },
+                      }}
+                    >
+                      <FiPlay className="text-xl text-white ml-1" />
+                    </motion.button>
+                  </motion.div>
 
-              {/* Project info */}
-              <motion.div
-                className="project-info p-6 bg-gradient-to-b from-gray-900/90 to-gray-900/80 backdrop-blur-sm"
-                variants={infoVariants}
-                initial="initial"
-                whileHover="hover"
-              >
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {project.title}
-                </h3>
-                <div className="flex justify-between items-center">
-                  <span
-                    className="text-sm uppercase tracking-wider font-medium"
-                    style={{ color: project.color }}
-                  >
-                    {categories.find((c) => c.id === project.category)?.name}
-                  </span>
-                  <button
-                    onClick={() =>
-                      setShowComparison(
-                        project.id === showComparison ? null : project.id
-                      )
-                    }
-                    className="text-xs flex items-center text-white/60 hover:text-white transition-colors"
-                  >
-                    <FiSliders className="mr-1" />
-                    Compare
-                  </button>
-                </div>
-              </motion.div>
-
-              {/* Before/After comparison */}
-              <AnimatePresence>
-                {showComparison === project.id && (
                   <motion.div
-                    className="absolute inset-0 bg-black z-10 p-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    className="project-info p-5 bg-gradient-to-b from-gray-900/70 to-gray-900/50"
+                    initial={{ y: 0 }}
+                    whileHover={{ y: -3 }}
+                    transition={{ duration: 0.6 }}
                   >
-                    <div className="relative w-full h-full">
-                      <div
-                        className="absolute inset-0 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${project.before})` }}
-                      />
-                      <div
-                        className="absolute inset-0 bg-cover bg-center comparison-after"
-                        data-project-id={project.id}
-                        style={{
-                          backgroundImage: `url(${project.after})`,
-                          clipPath: "polygon(0 0, 50% 0, 50% 100%, 0 100%)",
-                        }}
-                      />
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        defaultValue="50"
-                        className="absolute top-0 left-0 w-full h-full opacity-0 cursor-ew-resize z-20"
-                        onChange={(e) =>
-                          handleComparisonSliderChange(e, project.id)
+                    <div className="flex justify-start items-start mb-2">
+                      <h3 className="text-lg font-medium text-white">
+                        {project.title}
+                      </h3>
+                    </div>
+
+                    <div className="flex justify-between items-center">
+                      <span
+                        className="text-xs uppercase tracking-wider font-medium"
+                        style={{ color: project.color }}
+                      >
+                        {
+                          categories.find((c) => c.id === project.category)
+                            ?.name
                         }
-                      />
-                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 px-3 py-1 rounded-full text-sm flex items-center">
-                        <FiChevronLeft className="mr-1" />
-                        <span>Slide</span>
-                        <FiChevronRight className="ml-1" />
+                      </span>
+
+                      <div className="flex gap-1.5">
+                        {project.tags.map((tag, index) => (
+                          <motion.span
+                            key={index}
+                            className="text-[9px] px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-sm border border-white/5"
+                            style={{ color: project.color }}
+                            initial={{ opacity: 0, x: 5 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{
+                              delay: 0.3 + index * 0.1,
+                              duration: 0.5,
+                              ease: [0.16, 1, 0.3, 1],
+                            }}
+                          >
+                            {tag}
+                          </motion.span>
+                        ))}
                       </div>
                     </div>
-                    <button
-                      onClick={() => setShowComparison(null)}
-                      className="absolute top-4 right-4 bg-red-500 w-8 h-8 rounded-full flex items-center justify-center z-30 hover:bg-red-600 transition-colors"
-                    >
-                      <FiX className="w-4 h-4 text-white" />
-                    </button>
                   </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
-        </motion.div>
+
+                  {hoveredCard === project.id && (
+                    <motion.div
+                      className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-current to-transparent"
+                      style={{ color: project.color }}
+                      initial={{ width: 0 }}
+                      animate={{ width: "100%" }}
+                      transition={{
+                        duration: 0.8,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                    />
+                  )}
+                </motion.div>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <div className="text-center py-20 text-white/70">
+            No videos found in this category
+          </div>
+        )}
 
         {/* View all button */}
         <motion.div
-          className="text-center mt-16"
+          className="text-center mt-20"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
+          transition={{
+            duration: 0.8,
+            ease: [0.16, 1, 0.3, 1],
+            delay: 0.2,
+          }}
         >
           <motion.button
-            className="px-8 py-4 bg-transparent border-2 border-red-500 text-red-400 rounded-full hover:bg-red-500/10 transition-all flex items-center mx-auto group relative overflow-hidden"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className="px-8 py-3.5 bg-transparent border border-red-500/30 text-red-400 rounded-full hover:bg-red-500/10 transition-all flex items-center mx-auto group relative overflow-hidden"
+            whileHover={{
+              scale: 1.03,
+              borderColor: "rgba(239, 68, 68, 0.5)",
+              backgroundColor: "rgba(239, 68, 68, 0.05)",
+              transition: { duration: 0.6 },
+            }}
+            whileTap={{ scale: 0.98 }}
           >
-            <span className="relative z-10">View Full Portfolio</span>
+            <span className="relative z-10 font-medium tracking-wider text-sm">
+              VIEW FULL PORTFOLIO
+            </span>
             <motion.span
-              className="relative z-10"
-              whileHover={{ x: 5 }}
-              transition={{ type: "spring", stiffness: 500 }}
+              className="relative z-10 ml-3"
+              whileHover={{ x: 4 }}
+              transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 10,
+              }}
             >
-              <FiChevronRight className="w-5 h-5 ml-2" />
+              <FiChevronRight className="w-4 h-4" />
             </motion.span>
-            <span className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
           </motion.button>
         </motion.div>
       </div>
@@ -529,17 +497,26 @@ const Showreel = () => {
       <AnimatePresence>
         {isPlaying && currentVideo && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.6,
+              ease: [0.16, 1, 0.3, 1],
+            }}
           >
             <motion.div
-              className="relative w-full max-w-4xl rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-gray-900"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 20 }}
+              className="relative w-full max-w-5xl rounded-lg overflow-hidden border border-white/10 bg-gray-900/80 backdrop-blur-md"
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{
+                type: "spring",
+                damping: 20,
+                stiffness: 200,
+                mass: 0.5,
+              }}
             >
               <video
                 ref={(el) => (videoRefs.current[currentVideo.id] = el)}
@@ -552,22 +529,31 @@ const Showreel = () => {
                 Your browser does not support the video tag.
               </video>
 
-              <div className="absolute top-4 right-4 flex gap-2 z-20">
-                <span className="w-3 h-3 rounded-full bg-red-500 shadow-lg shadow-red-900/50" />
-                <span className="w-3 h-3 rounded-full bg-yellow-500 shadow-lg shadow-yellow-900/50" />
-                <span className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-900/50" />
-              </div>
-
-              <button
+              <motion.button
                 onClick={closeVideo}
-                className="absolute top-4 left-4 bg-red-500 w-8 h-8 rounded-full flex items-center justify-center z-30 hover:bg-red-600 transition-colors"
+                className="absolute top-4 left-4 bg-red-500/90 w-9 h-9 rounded-full flex items-center justify-center z-30 hover:bg-red-600 transition-all"
+                whileHover={{ rotate: 90, scale: 1.1 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 10,
+                }}
               >
                 <FiX className="w-4 h-4 text-white" />
-              </button>
+              </motion.button>
 
-              <div className="absolute bottom-4 left-4 bg-black/70 px-3 py-1 rounded text-sm font-mono z-20">
-                {currentVideo.title}
-              </div>
+              <motion.div
+                className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm font-medium z-20 border-l-2 border-red-500"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  delay: 0.3,
+                  duration: 0.6,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
+                <div className="text-white">{currentVideo.title}</div>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}

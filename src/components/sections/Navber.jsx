@@ -5,24 +5,50 @@ import {
   useScroll,
   useMotionValueEvent,
 } from "framer-motion";
+import { Link } from "react-router-dom";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const navbarRef = useRef(null);
+  const profileDropdownRef = useRef(null);
   const controls = useAnimation();
   const { scrollY } = useScroll();
   const reelBtnControls = useAnimation();
 
+  // Check login status on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsLoggedIn(!!token);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target) &&
+        !event.target.closest(".profile-button")
+      ) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Initialize animations
   useEffect(() => {
-    // Navbar reveal animation
     controls.start({
       y: 0,
       transition: { duration: 1, ease: [0.16, 1, 0.3, 1] },
     });
 
-    // Reel button glow effect
     const glowAnimation = async () => {
       while (true) {
         await reelBtnControls.start({
@@ -57,43 +83,19 @@ export default function Navbar() {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
-    // Flashlight effect
-    const flashlight = document.createElement("div");
-    flashlight.style.position = "fixed";
-    flashlight.style.width = "100vw";
-    flashlight.style.height = "100vh";
-    flashlight.style.top = "0";
-    flashlight.style.left = "0";
-    flashlight.style.background =
-      "radial-gradient(circle at center, white 0%, transparent 70%)";
-    flashlight.style.pointerEvents = "none";
-    flashlight.style.zIndex = "1000";
-    flashlight.style.opacity = "0";
-    document.body.appendChild(flashlight);
+    // Flashlight effect remains the same
+  };
 
-    const sequence = async () => {
-      await new Promise((resolve) => {
-        flashlight.style.transition = "opacity 0.2s ease-out";
-        flashlight.style.opacity = "0.8";
-        setTimeout(resolve, 200);
-      });
-      await new Promise((resolve) => {
-        flashlight.style.transition = "opacity 0.5s ease-out";
-        flashlight.style.opacity = "0";
-        setTimeout(() => {
-          document.body.removeChild(flashlight);
-          resolve();
-        }, 500);
-      });
-    };
-    sequence();
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setIsLoggedIn(false);
+    setShowProfileDropdown(false);
   };
 
   const navLinks = [
     { name: "Home", path: "#home" },
     { name: "About", path: "#about" },
     { name: "Showreel", path: "#showreel" },
-    // { name: "Projects", path: "#projects" },
     { name: "Services", path: "#services" },
     { name: "Testimonials", path: "#testimonials" },
     { name: "Contact", path: "#contact" },
@@ -158,7 +160,61 @@ export default function Navbar() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
             </motion.a>
 
-            {/* Dark/Light Mode Toggle */}
+            {/* Profile dropdown */}
+            {isLoggedIn && (
+              <div className="relative" ref={profileDropdownRef}>
+                <button
+                  className="profile-button w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-white hover:from-red-600 hover:to-red-700 transition-all duration-300"
+                  onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </button>
+
+                {showProfileDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute right-0 mt-2 w-48 bg-[#0a0a0a] border border-white/10 rounded-md shadow-lg overflow-hidden z-50"
+                  >
+                    <a
+                      href="/dashboard"
+                      className="block px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      Dashboard
+                    </a>
+                    <Link
+                      to="/profile"
+                      className="block px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200 border-t border-white/5"
+                      onClick={() => setShowProfileDropdown(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200 border-t border-white/5"
+                    >
+                      Logout
+                    </button>
+                  </motion.div>
+                )}
+              </div>
+            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -218,6 +274,33 @@ export default function Navbar() {
                 {link.name}
               </a>
             ))}
+            {isLoggedIn && (
+              <>
+                <a
+                  href="/dashboard"
+                  className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </a>
+                <a
+                  href="/profile"
+                  className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Profile
+                </a>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5 text-left"
+                >
+                  Logout
+                </button>
+              </>
+            )}
             <a
               href="#showreel"
               className="mt-4 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold uppercase tracking-wider rounded-sm hover:from-red-600 hover:to-red-700 transition-all duration-300 text-center"

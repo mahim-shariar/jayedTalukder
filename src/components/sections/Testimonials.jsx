@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion } from "framer-motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -17,85 +18,84 @@ const testimonials = [
   },
   {
     id: 2,
-    name: "Sarah & James",
-    role: "Wedding Clients",
+    name: "Alex Rodriguez",
+    role: "Music Video Director",
     quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
+      "The color grading work transformed our video into a cinematic masterpiece. Jayed understands mood like no other editor.",
     rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
+    reviewImage: "/review-music.jpg",
+    reviewAlt: "Screenshot of music video review",
   },
   {
     id: 3,
-    name: "Sarah & James",
-    role: "Wedding Clients",
+    name: "Maya Chen",
+    role: "Corporate Client",
     quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
+      "Our product launch video exceeded all expectations. The motion graphics and pacing were absolutely perfect for our brand.",
     rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
+    reviewImage: "/review-corporate.jpg",
+    reviewAlt: "Screenshot of corporate client review",
   },
   {
     id: 4,
-    name: "Sarah & James",
-    role: "Wedding Clients",
+    name: "David Wilson",
+    role: "Documentary Filmmaker",
     quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
+      "Jayed's storytelling ability through editing is phenomenal. He found the emotional core of our documentary material.",
     rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
+    reviewImage: "/review-doc.jpg",
+    reviewAlt: "Screenshot of documentary review",
   },
   {
     id: 5,
-    name: "Sarah & James",
-    role: "Wedding Clients",
+    name: "Lisa Park",
+    role: "Social Media Influencer",
     quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
+      "My engagement tripled after Jayed edited my travel vlogs. His pacing and transitions make even mundane moments exciting.",
     rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
+    reviewImage: "/review-social.jpg",
+    reviewAlt: "Screenshot of influencer review",
   },
   {
     id: 6,
-    name: "Sarah & James",
-    role: "Wedding Clients",
+    name: "The Thompson Family",
+    role: "Family Video Clients",
     quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
+      "We'll treasure this family reunion video forever. Jayed captured everyone's personalities so beautifully.",
     rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
+    reviewImage: "/review-family.jpg",
+    reviewAlt: "Screenshot of family video review",
   },
   {
     id: 7,
-    name: "Sarah & James",
-    role: "Wedding Clients",
+    name: "Ryan Brooks",
+    role: "Commercial Director",
     quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
+      "The most professional editor I've worked with. Delivered three perfect versions under impossible deadlines.",
     rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
+    reviewImage: "/review-commercial.jpg",
+    reviewAlt: "Screenshot of commercial review",
   },
   {
     id: 8,
-    name: "Sarah & James",
-    role: "Wedding Clients",
+    name: "Nina Patel",
+    role: "Event Videographer",
     quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
+      "I outsource all my post-production to Jayed now. Consistent quality that makes my work look better than it is.",
     rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
+    reviewImage: "/review-event.jpg",
+    reviewAlt: "Screenshot of event video review",
   },
   {
     id: 9,
-    name: "Sarah & James",
-    role: "Wedding Clients",
+    name: "Marcus Lee",
+    role: "YouTube Creator",
     quote:
-      "Jayed captured our day better than we remembered it. The editing of our first dance gives me chills every time.",
+      "Subscribers keep asking who edits my videos. Jayed's work makes my content look premium without losing authenticity.",
     rating: 5,
-    reviewImage: "/review-wedding.jpg",
-    reviewAlt: "Screenshot of wedding client review",
+    reviewImage: "/review-youtube.jpg",
+    reviewAlt: "Screenshot of YouTube review",
   },
-  // ... other testimonials
 ];
 
 export default function Testimonials() {
@@ -207,12 +207,29 @@ export default function Testimonials() {
     <section
       ref={sectionRef}
       id="testimonials"
-      className="testimonials-section py-24 bg-[#0a0a0a] text-white relative overflow-hidden"
+      className="min-h-screen py-24 bg-[#0a0a0a] text-white relative overflow-hidden"
     >
-      {/* Background elements */}
+      {/* Background elements matching your design */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a] z-0"></div>
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-15 pointer-events-none z-10" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-15 pointer-events-none z-10"></div>
+
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(30)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-white/10 rounded-full"
+            style={{
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animation: `float ${5 + Math.random() * 10}s linear infinite`,
+              animationDelay: `${Math.random() * 5}s`,
+              transform: `scale(${0.5 + Math.random() * 2})`,
+            }}
+          />
+        ))}
+      </div>
 
       <div ref={containerRef} className="container mx-auto px-4 relative z-20">
         {/* Section Header */}
