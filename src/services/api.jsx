@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const API_URL =
-  process.env.NODE_ENV === "production"
-    ? "/api/v1"
+  import.meta.env.VITE_NODE_ENV === "production"
+    ? "https://jayed-talukder-server.vercel.app/api/v1"
     : "http://localhost:5000/api/v1";
 
 const api = axios.create({
