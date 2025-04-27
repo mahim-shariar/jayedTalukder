@@ -199,14 +199,6 @@ export default function Testimonials() {
     return `${content.substring(0, maxLength)}...`;
   };
 
-  if (error) {
-    return (
-      <section className="min-h-screen py-24 bg-[#0a0a0a] text-white relative overflow-hidden flex items-center justify-center">
-        <div className="text-center text-red-400">Error: {error}</div>
-      </section>
-    );
-  }
-
   return (
     <section
       ref={sectionRef}
@@ -248,7 +240,11 @@ export default function Testimonials() {
         </div>
 
         {/* Testimonials Grid */}
-        {loading ? (
+        {error ? (
+          <div className="text-center text-gray-400">
+            No testimonials available yet.
+          </div>
+        ) : loading ? (
           <div className="flex justify-center items-center h-72">
             <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
