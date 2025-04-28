@@ -1,23 +1,28 @@
-import React from "react";
-import Hero from "../components/sections/Hero";
-import About from "../components/sections/About";
-import Services from "../components/sections/Services";
-import Testimonials from "../components/sections/Testimonials";
-import Contact from "../components/sections/Contact";
-import EasterEgg from "../components/sections/EasterEgg";
-import Showreel from "../components/sections/Showreel";
+import React, { Suspense } from "react";
+import LoadingSpinner from "../components/sections/LoadingSpinner";
+
+const Hero = React.lazy(() => import("../components/sections/Hero"));
+const About = React.lazy(() => import("../components/sections/About"));
+const Services = React.lazy(() => import("../components/sections/Services"));
+const Testimonials = React.lazy(() =>
+  import("../components/sections/Testimonials")
+);
+const Contact = React.lazy(() => import("../components/sections/Contact"));
+const EasterEgg = React.lazy(() => import("../components/sections/EasterEgg"));
+const Showreel = React.lazy(() => import("../components/sections/Showreel"));
 
 const Home = () => {
   return (
     <>
-      <Hero />
-      <About />
-      <Showreel />
-
-      <Services />
-      <Testimonials />
-      <Contact />
-      <EasterEgg />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Hero />
+        <About />
+        <Showreel />
+        <Services />
+        <Testimonials />
+        <Contact />
+        <EasterEgg />
+      </Suspense>
     </>
   );
 };

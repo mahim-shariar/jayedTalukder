@@ -1,21 +1,32 @@
 import { createBrowserRouter } from "react-router-dom";
-import Home from "./page/Home";
+import { Suspense, lazy } from "react";
 import RootLayout from "./layouts/RootLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
-import ProfilePage from "./page/ProfilePage";
-import Dashboard from "./page/Dashboard";
-// You'll need to create this component
 import PrivateRoute from "./components/auth/PrivateRoute";
-import NotFoundPage from "./page/NotFoundPage";
+import LoadingSpinner from "./components/sections/LoadingSpinner";
+import ErrorBoundary from "./components/sections/ErrorBoundry";
 
-// This is a mock function - replace with your actual auth check
+// Lazy-loaded pages
+const Home = lazy(() => import("./page/Home"));
+const Dashboard = lazy(() => import("./page/Dashboard"));
+const ProfilePage = lazy(() => import("./page/ProfilePage"));
+const NotFoundPage = lazy(() => import("./page/NotFoundPage"));
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
-
-    children: [{ index: true, element: <Home /> }],
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Home />
+          </Suspense>
+        ),
+      },
+    ],
   },
   {
     path: "dashboard",
@@ -24,14 +35,33 @@ const router = createBrowserRouter([
         <DashboardLayout />
       </PrivateRoute>
     ),
+    errorElement: <ErrorBoundary />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: "profile", element: <ProfilePage /> },
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Dashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProfilePage />
+          </Suspense>
+        ),
+      },
     ],
   },
   {
     path: "*",
-    element: <NotFoundPage />,
+    element: (
+      <Suspense fallback={<LoadingSpinner />}>
+        <NotFoundPage />
+      </Suspense>
+    ),
   },
 ]);
 
