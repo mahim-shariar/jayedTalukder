@@ -3,10 +3,17 @@ import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import confetti from "canvas-confetti";
 import { sendEmail } from "../../utils/emailService";
-import { FaPhone, FaEnvelope, FaWhatsapp, FaLinkedin } from "react-icons/fa";
+import {
+  FaPhone,
+  FaEnvelope,
+  FaWhatsapp,
+  FaLinkedin,
+  FaTwitter,
+} from "react-icons/fa";
 import { FiSend, FiLoader } from "react-icons/fi";
 import { BsStars, BsPencil } from "react-icons/bs";
 import { HiOutlineLocationMarker } from "react-icons/hi";
+import { FaSquareXTwitter } from "react-icons/fa6";
 
 export default function Contact() {
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -46,10 +53,10 @@ export default function Contact() {
       url: "https://wa.me/8801794598569",
     },
     {
-      icon: <FaLinkedin className="text-2xl text-blue-600  h-14 my-auto " />,
-      platform: "LinkedIn",
+      icon: <FaSquareXTwitter className="text-2xl  h-14 my-auto " />,
+      platform: "X",
       handle: "jayedbinkibria",
-      url: "https://www.linkedin.com/in/jayed-bin-kibria-233570254/",
+      url: "https://x.com/jayedbinkibria",
     },
   ];
 

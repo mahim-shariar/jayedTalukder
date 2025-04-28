@@ -471,7 +471,10 @@ export default function Hero() {
         </p>
 
         <div className="flex gap-3 md:gap-4 justify-center flex-wrap">
-          <button className="px-6 py-3 md:px-8 md:py-4 bg-red-500 text-neutral-50 rounded-full hover:bg-red-600 transition-all transform hover:scale-[1.03] flex items-center group will-change-transform text-sm md:text-base">
+          <a
+            href="#showreel"
+            className="px-6 py-3 md:px-8 md:py-4 bg-red-500 text-neutral-50 rounded-full hover:bg-red-600 transition-all transform hover:scale-[1.03] flex items-center group will-change-transform text-sm md:text-base"
+          >
             <span>View Portfolio</span>
             <svg
               className="w-4 h-4 md:w-5 md:h-5 ml-2 transition-transform group-hover:translate-x-1"
@@ -486,10 +489,13 @@ export default function Hero() {
                 d="M9 5l7 7-7 7"
               ></path>
             </svg>
-          </button>
-          <button className="px-6 py-3 md:px-8 md:py-4 bg-transparent border border-neutral-600 text-neutral-200 rounded-full hover:bg-neutral-100 hover:text-neutral-900 transition-all transform hover:scale-[1.03] will-change-transform text-sm md:text-base">
+          </a>
+          <a
+            href="#contact"
+            className="px-6 py-3 md:px-8 md:py-4 bg-transparent border border-neutral-600 text-neutral-200 rounded-full hover:bg-neutral-100 hover:text-neutral-900 transition-all transform hover:scale-[1.03] will-change-transform text-sm md:text-base"
+          >
             Get in Touch
-          </button>
+          </a>
         </div>
       </div>
 
