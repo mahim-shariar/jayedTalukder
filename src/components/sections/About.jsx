@@ -557,7 +557,7 @@ export default function About() {
                         ></path>
                       </svg>
                       <span className="font-mono text-sm">
-                        Performance Reward 2024
+                        Performance Reward 2025
                       </span>
                     </div>
                   </div>

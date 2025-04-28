@@ -640,7 +640,7 @@ export default function EasterEgg() {
                       <ul className="space-y-2 text-sm text-white/80">
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                          Hand-me-down DSLR (my first "professional" camera)
+                          Hand-me-down MacBook (my first "laptop" camera)
                         </li>
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
@@ -675,7 +675,7 @@ export default function EasterEgg() {
 
                   <div className="border-t border-white/10 pt-8">
                     <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 mb-8">
-                      MY CREATIVE EVOLUTION
+                      MY CREATIVE JOURNEY
                     </h3>
 
                     {/* Alternate Timeline Design */}
@@ -711,7 +711,7 @@ export default function EasterEgg() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <span className="text-xs font-mono px-2 py-1 rounded bg-red-900/30 text-red-400 border border-red-800/50">
-                                    AWAKENING
+                                    BEGINNINGS
                                   </span>
                                   <span className="text-xs text-white/50">
                                     2024
@@ -721,9 +721,11 @@ export default function EasterEgg() {
                                   The Classroom Rebellion
                                 </h4>
                                 <p className="text-white/70 text-sm mt-1">
-                                  Found more inspiration in editing event
-                                  footage than attending lectures - the first
-                                  crack in my academic facade
+                                  I discovered my real passion wasn't in
+                                  lectures, but in editing event footage. While
+                                  classmates took notes, I was secretly teaching
+                                  myself video editing - the first sign that
+                                  traditional education might not be my path.
                                 </p>
                               </div>
                               <div className="sm:w-32 flex justify-center">
@@ -770,19 +772,21 @@ export default function EasterEgg() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <span className="text-xs font-mono px-2 py-1 rounded bg-blue-900/30 text-blue-400 border border-blue-800/50">
-                                    VALIDATION
+                                    BREAKTHROUGH
                                   </span>
                                   <span className="text-xs text-white/50">
-                                    2024
+                                    2025
                                   </span>
                                 </div>
                                 <h4 className="text-lg font-semibold text-white">
-                                  Digital Dropout Skool
+                                  The Game-Changing Tool
                                 </h4>
                                 <p className="text-white/70 text-sm mt-1">
-                                  That MacBook wasn't just a tool - it was proof
-                                  I could build a future outside traditional
-                                  education
+                                  When I won that MacBook in a competition, it
+                                  wasn't just a prize - it became my creative
+                                  lifeline. This was the validation I needed
+                                  that I could build real skills outside the
+                                  classroom.
                                 </p>
                               </div>
                               <div className="sm:w-32 flex justify-center">
@@ -826,19 +830,21 @@ export default function EasterEgg() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <span className="text-xs font-mono px-2 py-1 rounded bg-purple-900/30 text-purple-400 border border-purple-800/50">
-                                    GRIND
+                                    DEDICATION
                                   </span>
                                   <span className="text-xs text-white/50">
-                                    2024
+                                    2025
                                   </span>
                                 </div>
                                 <h4 className="text-lg font-semibold text-white">
-                                  The Nocturnal Editor
+                                  The Late-Night Grind
                                 </h4>
                                 <p className="text-white/70 text-sm mt-1">
-                                  2AM color grading sessions between classes -
-                                  sacrificing sleep for skills that would become
-                                  my career
+                                  Countless 2AM editing sessions between classes
+                                  - I traded sleep for mastering color grading
+                                  and storytelling techniques. What started as a
+                                  hobby was becoming something much more
+                                  serious.
                                 </p>
                               </div>
                               <div className="sm:w-32 flex justify-center">
@@ -885,19 +891,21 @@ export default function EasterEgg() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <span className="text-xs font-mono px-2 py-1 rounded bg-green-900/30 text-green-400 border border-green-800/50">
-                                    CLARITY
+                                    TURNING POINT
                                   </span>
                                   <span className="text-xs text-white/50">
-                                    2024
+                                    2025
                                   </span>
                                 </div>
                                 <h4 className="text-lg font-semibold text-white">
-                                  The Pivot
+                                  When Passion Became Purpose
                                 </h4>
                                 <p className="text-white/70 text-sm mt-1">
-                                  Realized my "side hustle" was actually my main
-                                  hustle - the moment education became
-                                  self-directed
+                                  The moment I realized my "side hustle" was
+                                  actually my calling. I made the decision to
+                                  shift focus completely, embracing
+                                  self-directed learning as my true education
+                                  path forward.
                                 </p>
                               </div>
                               <div className="sm:w-32 flex justify-center">
@@ -950,19 +958,21 @@ export default function EasterEgg() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
                                   <span className="text-xs font-mono px-2 py-1 rounded bg-yellow-900/30 text-yellow-400 border border-yellow-800/50">
-                                    NOW
+                                    TODAY
                                   </span>
                                   <span className="text-xs text-white/50">
                                     Present
                                   </span>
                                 </div>
                                 <h4 className="text-lg font-semibold text-white">
-                                  Storytelling Alchemist
+                                  Storytelling With Impact
                                 </h4>
                                 <p className="text-white/70 text-sm mt-1">
-                                  Transforming raw footage into emotional
-                                  experiences - the hungry student now crafts
-                                  what inspires others
+                                  Now I transform raw footage into compelling
+                                  stories that connect with audiences. The
+                                  student who once snuck editing time between
+                                  classes now helps brands and creators
+                                  communicate their vision powerfully.
                                 </p>
                               </div>
                               <div className="sm:w-32 flex justify-center">
