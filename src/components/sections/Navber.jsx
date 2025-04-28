@@ -191,15 +191,15 @@ export default function Navbar() {
                     transition={{ duration: 0.2 }}
                     className="absolute right-0 mt-2 w-48 bg-[#0a0a0a] border border-white/10 rounded-md shadow-lg overflow-hidden z-50"
                   >
-                    <a
-                      href="/dashboard"
+                    <Link
+                      to="/dashboard"
                       className="block px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200"
                       onClick={() => setShowProfileDropdown(false)}
                     >
                       Dashboard
-                    </a>
+                    </Link>
                     <Link
-                      to="/profile"
+                      to="/dashboard/profile"
                       className="block px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200 border-t border-white/5"
                       onClick={() => setShowProfileDropdown(false)}
                     >
@@ -276,20 +276,20 @@ export default function Navbar() {
             ))}
             {isLoggedIn && (
               <>
-                <a
-                  href="/dashboard"
+                <Link
+                  to="/dashboard"
                   className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
-                </a>
-                <a
-                  href="/profile"
+                </Link>
+                <Link
+                  to="/dashboard/profile"
                   className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Profile
-                </a>
+                </Link>
                 <button
                   onClick={() => {
                     handleLogout();
