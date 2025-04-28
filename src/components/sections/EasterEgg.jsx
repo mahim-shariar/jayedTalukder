@@ -402,7 +402,7 @@ export default function EasterEgg() {
 
       {/* Riddle Modal */}
       {showRiddle && !isUnlocked && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div
             ref={riddleRef}
             className="bg-[#0f0f0f] border border-white/10 rounded-lg max-w-md w-full p-6 relative shadow-2xl shadow-red-900/20"
@@ -486,7 +486,7 @@ export default function EasterEgg() {
       {showModal && isUnlocked && (
         <div
           ref={eggRef}
-          className="fixed inset-0 z-40 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
         >
           <div
             className="relative w-full max-w-4xl h-full md:h-[80vh] bg-gradient-to-br from-[#0f0f0f] to-black border border-white/10 rounded-xl overflow-hidden shadow-2xl shadow-red-900/30"
