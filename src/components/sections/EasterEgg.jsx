@@ -640,7 +640,7 @@ export default function EasterEgg() {
                       <ul className="space-y-2 text-sm text-white/80">
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
-                          Hand-me-down MacBook (my first "laptop" camera)
+                          Hand-me-down MacBook (my first "Laptop" ever)
                         </li>
                         <li className="flex items-center">
                           <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>

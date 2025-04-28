@@ -580,7 +580,7 @@ export default function About() {
                 <h4 className="text-red-400 font-mono text-sm mb-3">
                   CREATIVE TOOLS
                 </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                   <div>
                     <div className="text-white font-medium">
                       My Trusted MacBook
@@ -602,6 +602,10 @@ export default function About() {
                   <div>
                     <div className="text-white font-medium">After Effects</div>
                     <div className="text-white/60">Motion magic</div>
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">Final Cut Pro </div>
+                    <div className="text-white/60">Final cut magic</div>
                   </div>
                 </div>
               </div>
