@@ -11,6 +11,8 @@ import {
   FiUpload,
   FiArrowLeft,
   FiUser,
+  FiLoader,
+  FiCheckCircle,
 } from "react-icons/fi";
 import {
   getVideoReels,
@@ -48,6 +50,15 @@ const Dashboard = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [editingVideo, setEditingVideo] = useState(null);
   const [editingReview, setEditingReview] = useState(null);
+  const [uploading, setUploading] = useState({
+    video: false,
+    thumbnail: false,
+    screenshot: false,
+  });
+  const [submitting, setSubmitting] = useState({
+    video: false,
+    review: false,
+  });
 
   // Video form state
   const [videoForm, setVideoForm] = useState({
@@ -64,7 +75,7 @@ const Dashboard = () => {
     content: "",
     rating: 5,
     screenshot: "",
-    userName: "", // New field added
+    userName: "",
   });
 
   // Helper function to get category name
@@ -137,12 +148,24 @@ const Dashboard = () => {
     });
   };
 
-  // Handle file uploads
+  // Handle file uploads with loading states
   const handleFileUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
 
     try {
+      setUploading({ ...uploading, [type]: true });
+
+      const toastId = toast.loading(`Uploading ${type}...`, {
+        position: "top-right",
+        autoClose: false,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: false,
+        progress: undefined,
+      });
+
       const res = await uploadFile(file);
 
       if (type === "video") {
@@ -161,24 +184,55 @@ const Dashboard = () => {
           screenshot: res.url,
         });
       }
+
+      toast.update(toastId, {
+        render: `${
+          type.charAt(0).toUpperCase() + type.slice(1)
+        } uploaded successfully!`,
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
     } catch (err) {
-      toast.error("Failed to upload file");
+      toast.error(`Failed to upload ${type}`);
+    } finally {
+      setUploading({ ...uploading, [type]: false });
     }
   };
 
-  // Submit video form
+  // Submit video form with loading state
   const submitVideoForm = async (e) => {
     e.preventDefault();
     try {
+      setSubmitting({ ...submitting, video: true });
+
+      const toastId = toast.loading(
+        editingVideo ? "Updating video..." : "Adding video...",
+        {
+          position: "top-right",
+          autoClose: false,
+        }
+      );
+
       const tags = videoForm.tags.split(",").map((tag) => tag.trim());
       const payload = { ...videoForm, tags };
 
       if (editingVideo) {
         await updateVideoReel(editingVideo._id, payload);
-        toast.success("Video updated successfully");
+        toast.update(toastId, {
+          render: "Video updated successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
       } else {
         await createVideoReel(payload);
-        toast.success("Video added successfully");
+        toast.update(toastId, {
+          render: "Video added successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
       }
 
       setShowVideoModal(false);
@@ -197,19 +251,41 @@ const Dashboard = () => {
       setVideos(res.data.videoReels);
     } catch (err) {
       toast.error(err.message || "Failed to save video");
+    } finally {
+      setSubmitting({ ...submitting, video: false });
     }
   };
 
-  // Submit review form
+  // Submit review form with loading state
   const submitReviewForm = async (e) => {
     e.preventDefault();
     try {
+      setSubmitting({ ...submitting, review: true });
+
+      const toastId = toast.loading(
+        editingReview ? "Updating review..." : "Adding review...",
+        {
+          position: "top-right",
+          autoClose: false,
+        }
+      );
+
       if (editingReview) {
         await updateReview(editingReview._id, reviewForm);
-        toast.success("Review updated successfully");
+        toast.update(toastId, {
+          render: "Review updated successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
       } else {
         await createReview(reviewForm);
-        toast.success("Review added successfully");
+        toast.update(toastId, {
+          render: "Review added successfully!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
       }
 
       setShowReviewModal(false);
@@ -226,6 +302,8 @@ const Dashboard = () => {
       setReviews(res.data.reviews);
     } catch (err) {
       toast.error(err.message || "Failed to save review");
+    } finally {
+      setSubmitting({ ...submitting, review: false });
     }
   };
 
@@ -686,12 +764,28 @@ const Dashboard = () => {
                             placeholder="Paste video URL"
                           />
                           <label className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                            <FiUpload className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors" />
+                            {uploading.video ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
+                              >
+                                <FiLoader className="h-5 w-5 text-red-500" />
+                              </motion.div>
+                            ) : videoForm.videoUrl ? (
+                              <FiCheckCircle className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <FiUpload className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors" />
+                            )}
                             <input
                               type="file"
                               accept="video/*"
                               className="hidden"
                               onChange={(e) => handleFileUpload(e, "video")}
+                              disabled={uploading.video}
                             />
                           </label>
                         </div>
@@ -715,12 +809,28 @@ const Dashboard = () => {
                             placeholder="Paste thumbnail URL"
                           />
                           <label className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                            <FiUpload className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors" />
+                            {uploading.thumbnail ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
+                              >
+                                <FiLoader className="h-5 w-5 text-red-500" />
+                              </motion.div>
+                            ) : videoForm.thumbnailUrl ? (
+                              <FiCheckCircle className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <FiUpload className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors" />
+                            )}
                             <input
                               type="file"
                               accept="image/*"
                               className="hidden"
                               onChange={(e) => handleFileUpload(e, "thumbnail")}
+                              disabled={uploading.thumbnail}
                             />
                           </label>
                         </div>
@@ -802,11 +912,25 @@ const Dashboard = () => {
                       </motion.button>
                       <motion.button
                         type="submit"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
+                        whileHover={{ scale: submitting.video ? 1 : 1.02 }}
+                        whileTap={{ scale: submitting.video ? 1 : 0.98 }}
+                        className={`px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 flex items-center justify-center ${
+                          submitting.video
+                            ? "opacity-75 cursor-not-allowed"
+                            : ""
+                        }`}
+                        disabled={submitting.video}
                       >
-                        {editingVideo ? "Update Video" : "Add Video"}
+                        {submitting.video ? (
+                          <>
+                            <FiLoader className="animate-spin mr-2" />
+                            {editingVideo ? "Updating..." : "Adding..."}
+                          </>
+                        ) : editingVideo ? (
+                          "Update Video"
+                        ) : (
+                          "Add Video"
+                        )}
                       </motion.button>
                     </div>
                   </form>
@@ -930,7 +1054,22 @@ const Dashboard = () => {
                             placeholder="Paste screenshot URL"
                           />
                           <label className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                            <FiUpload className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors" />
+                            {uploading.screenshot ? (
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{
+                                  duration: 1,
+                                  repeat: Infinity,
+                                  ease: "linear",
+                                }}
+                              >
+                                <FiLoader className="h-5 w-5 text-red-500" />
+                              </motion.div>
+                            ) : reviewForm.screenshot ? (
+                              <FiCheckCircle className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <FiUpload className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors" />
+                            )}
                             <input
                               type="file"
                               accept="image/*"
@@ -938,6 +1077,7 @@ const Dashboard = () => {
                               onChange={(e) =>
                                 handleFileUpload(e, "screenshot")
                               }
+                              disabled={uploading.screenshot}
                             />
                           </label>
                         </div>
@@ -956,11 +1096,25 @@ const Dashboard = () => {
                       </motion.button>
                       <motion.button
                         type="submit"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200"
+                        whileHover={{ scale: submitting.review ? 1 : 1.02 }}
+                        whileTap={{ scale: submitting.review ? 1 : 0.98 }}
+                        className={`px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 flex items-center justify-center ${
+                          submitting.review
+                            ? "opacity-75 cursor-not-allowed"
+                            : ""
+                        }`}
+                        disabled={submitting.review}
                       >
-                        {editingReview ? "Update Review" : "Add Review"}
+                        {submitting.review ? (
+                          <>
+                            <FiLoader className="animate-spin mr-2" />
+                            {editingReview ? "Updating..." : "Adding..."}
+                          </>
+                        ) : editingReview ? (
+                          "Update Review"
+                        ) : (
+                          "Add Review"
+                        )}
                       </motion.button>
                     </div>
                   </form>
