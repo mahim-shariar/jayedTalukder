@@ -1,21 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { FiPlay, FiX, FiChevronRight, FiFilm } from "react-icons/fi";
 import {
-  FiPlay,
-  FiX,
-  FiChevronRight,
-  FiFilm,
-  FiExternalLink,
-} from "react-icons/fi";
-import {
-  FaHeart,
-  FaMoneyBillWave,
-  FaGlobeAmericas,
-  FaAward,
-  FaMosque,
-  FaPodcast,
-} from "react-icons/fa";
-import { getVideoReels, getVideoReelsByCategory } from "../../services/api";
+  getVideoReels,
+  getVideoReelsByCategory,
+  getVisibleCategories,
+} from "../../services/api";
 
 const Showreel = () => {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -24,6 +14,7 @@ const Showreel = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
+  const [categories, setCategories] = useState([]);
   const videoRefs = useRef({});
 
   // Categories to exclude
@@ -32,45 +23,6 @@ const Showreel = () => {
     "bloopers",
     "behindTheScenes",
     "mySelfIntro",
-  ];
-
-  // Categories with React Icons
-  const categories = [
-    {
-      id: "all",
-      name: "All Projects",
-      icon: <FiFilm className="inline mr-2" />,
-    },
-    {
-      id: "wedding",
-      name: "Wedding Films",
-      icon: <FaHeart className="inline mr-2" />,
-    },
-    {
-      id: "commercial",
-      name: "Commercial",
-      icon: <FaMoneyBillWave className="inline mr-2" />,
-    },
-    {
-      id: "travel",
-      name: "Travel",
-      icon: <FaGlobeAmericas className="inline mr-2" />,
-    },
-    {
-      id: "shortfilm",
-      name: "Short Films",
-      icon: <FaAward className="inline mr-2" />,
-    },
-    {
-      id: "islamic",
-      name: "Islamic",
-      icon: <FaMosque className="inline mr-2" />,
-    },
-    {
-      id: "podcast",
-      name: "Podcast",
-      icon: <FaPodcast className="inline mr-2" />,
-    },
   ];
 
   // Animation variants
@@ -150,8 +102,40 @@ const Showreel = () => {
     }
   };
 
+  // Fetch visible categories from API
+  const fetchVisibleCategories = async () => {
+    try {
+      const response = await getVisibleCategories();
+      // Add "All Projects" as the first category
+      const visibleCategories = [
+        {
+          id: "all",
+          name: "All Projects",
+          icon: <FiFilm className="inline mr-2" />,
+        },
+        ...response.data.categories.map((category) => ({
+          id: category.slug,
+          name: category.name,
+          icon: <FiFilm className="inline mr-2" />,
+        })),
+      ];
+      setCategories(visibleCategories);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+      // Fallback to just "All Projects" if API fails
+      setCategories([
+        {
+          id: "all",
+          name: "All Projects",
+          icon: <FiFilm className="inline mr-2" />,
+        },
+      ]);
+    }
+  };
+
   // Initial load and category change handler
   useEffect(() => {
+    fetchVisibleCategories();
     fetchVideos(activeCategory);
   }, [activeCategory]);
 
@@ -414,10 +398,8 @@ const Showreel = () => {
                         className="text-xs uppercase tracking-wider font-medium"
                         style={{ color: project.color }}
                       >
-                        {
-                          categories.find((c) => c.id === project.category)
-                            ?.name
-                        }
+                        {categories.find((c) => c.id === project.category)
+                          ?.name || project.category}
                       </span>
 
                       <div className="flex gap-1.5">

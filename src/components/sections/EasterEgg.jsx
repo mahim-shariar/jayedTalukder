@@ -132,9 +132,9 @@ export default function EasterEgg() {
       try {
         setLoadingVideos(true);
         const categoryMap = {
-          myFirstEdit: "myFirstEdit",
+          myFirstEdit: "my-first-edit",
           bloopers: "bloopers",
-          behindScenes: "behindTheScenes",
+          behindScenes: "behind-the-scenes",
         };
 
         const response = await getVideoReelsByCategory(categoryMap[activeTab]);
@@ -535,7 +535,7 @@ export default function EasterEgg() {
                 <div className="flex border-b border-white/10">
                   <button
                     className={`px-4 py-3 text-sm font-medium border-b-2 ${
-                      activeTab === "myFirstEdit"
+                      activeTab === "my-first-edit"
                         ? "border-red-500 text-red-400"
                         : "border-transparent text-white/50 hover:text-white/80"
                     } transition-colors`}

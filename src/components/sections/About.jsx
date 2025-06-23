@@ -31,7 +31,7 @@ export default function About() {
     const fetchIntroVideo = async () => {
       try {
         setLoadingVideo(true);
-        const response = await getVideoReelsByCategory("mySelfIntro");
+        const response = await getVideoReelsByCategory("my-self-introduction");
         if (
           response.data &&
           response.data.videoReels &&

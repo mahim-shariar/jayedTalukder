@@ -143,6 +143,46 @@ export const deleteReview = async (id) => {
   return response.data;
 };
 
+export const getCategories = async (params = {}) => {
+  const response = await api.get("/categories", { params });
+  return response.data;
+};
+
+export const getCategory = async (slug) => {
+  const response = await api.get(`/categories/${slug}`);
+  return response.data;
+};
+
+export const createCategory = async (categoryData) => {
+  const response = await api.post("/categories", categoryData);
+  return response.data;
+};
+
+export const updateCategory = async (slug, categoryData) => {
+  const response = await api.patch(`/categories/${slug}`, categoryData);
+  return response.data;
+};
+
+export const deleteCategory = async (slug) => {
+  const response = await api.delete(`/categories/${slug}`);
+  return response.data;
+};
+
+// Enhanced Category API
+export const getVisibleCategories = async () => {
+  const response = await api.get("/categories", {
+    params: { isShownInCategory: true },
+  });
+  return response.data;
+};
+
+export const searchCategories = async (query) => {
+  const response = await api.get("/categories", {
+    params: { search: query },
+  });
+  return response.data;
+};
+
 // File Upload API
 export const uploadFile = async (file) => {
   const formData = new FormData();
