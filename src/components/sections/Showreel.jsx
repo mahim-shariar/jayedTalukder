@@ -500,7 +500,7 @@ const Showreel = () => {
             }}
           >
             <motion.div
-              className="relative w-full max-w-5xl rounded-lg overflow-hidden border border-white/10 bg-gray-900/80 backdrop-blur-md"
+              className="relative w-full h-full max-w-5xl max-h-[90vh] flex items-center justify-center"
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -511,42 +511,46 @@ const Showreel = () => {
                 mass: 0.5,
               }}
             >
-              <video
-                ref={(el) => (videoRefs.current[currentVideo.id] = el)}
-                className="w-full"
-                controls
-                autoPlay
-                muted={false}
-              >
-                <source src={currentVideo.video} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              {/* Video container with dynamic sizing */}
+              <div className="relative w-full h-full flex items-center justify-center">
+                <video
+                  ref={(el) => (videoRefs.current[currentVideo.id] = el)}
+                  className="h-full max-h-[80vh] object-contain"
+                  controls
+                  autoPlay
+                  muted={false}
+                  playsInline
+                >
+                  <source src={currentVideo.video} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
 
-              <motion.button
-                onClick={closeVideo}
-                className="absolute top-4 left-4 bg-red-500/90 w-9 h-9 rounded-full flex items-center justify-center z-30 hover:bg-red-600 transition-all"
-                whileHover={{ rotate: 90, scale: 1.1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 10,
-                }}
-              >
-                <FiX className="w-4 h-4 text-white" />
-              </motion.button>
+                <motion.button
+                  onClick={closeVideo}
+                  className="absolute top-4 left-4 bg-red-500/90 w-9 h-9 rounded-full flex items-center justify-center z-30 hover:bg-red-600 transition-all"
+                  whileHover={{ rotate: 90, scale: 1.1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 10,
+                  }}
+                >
+                  <FiX className="w-4 h-4 text-white" />
+                </motion.button>
 
-              <motion.div
-                className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm font-medium z-20 border-l-2 border-red-500"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  delay: 0.3,
-                  duration: 0.6,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-              >
-                <div className="text-white">{currentVideo.title}</div>
-              </motion.div>
+                <motion.div
+                  className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm font-medium z-20 border-l-2 border-red-500"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    delay: 0.3,
+                    duration: 0.6,
+                    ease: [0.16, 1, 0.3, 1],
+                  }}
+                >
+                  <div className="text-white">{currentVideo.title}</div>
+                </motion.div>
+              </div>
             </motion.div>
           </motion.div>
         )}
