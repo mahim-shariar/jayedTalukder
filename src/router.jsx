@@ -5,6 +5,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import LoadingSpinner from "./components/sections/LoadingSpinner";
 import ErrorBoundary from "./components/sections/ErrorBoundry";
+import AllProject from "./page/AllProject";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./page/Home"));
@@ -23,6 +24,14 @@ const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingSpinner />}>
             <Home />
+          </Suspense>
+        ),
+      },
+      {
+        path: "projects",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <AllProject />
           </Suspense>
         ),
       },

@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -64,14 +64,57 @@ const productionStages = [
   },
 ];
 
+// Animation variants for Framer Motion
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.3,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  },
+};
+
+const cardVariants = (direction) => ({
+  hidden: {
+    x: direction === "left" ? -50 : 50,
+    opacity: 0,
+  },
+  visible: {
+    x: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.8,
+      ease: "backOut",
+    },
+  },
+});
+
 export default function ProductionProcess() {
   const cardsRef = useRef([]);
   const sectionRef = useRef(null);
   const containerRef = useRef(null);
   const videoRefs = useRef([]);
 
+  // Use Framer Motion's useInView hook to detect when section is in view
+  const isInView = useInView(sectionRef, { once: false, amount: 0.3 });
+
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // Keep your existing GSAP animations
       // Section title animation
       gsap.fromTo(
         ".process-title",
@@ -103,7 +146,7 @@ export default function ProductionProcess() {
         }
       );
 
-      // Card animations
+      // Card animations - keeping GSAP for these as well
       cardsRef.current.forEach((card, i) => {
         gsap.fromTo(
           card,
@@ -148,19 +191,21 @@ export default function ProductionProcess() {
       id="process"
       className="min-h-screen py-24 bg-[#0a0a0a] text-white relative overflow-hidden"
     >
-      {/* Dark gradient background */}
+      {/* Background elements remain the same */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a] z-0"></div>
-
-      {/* Grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdHVlcz0iMCIvPgogIDwvZmlsdGVyPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-15 pointer-events-none z-10"></div>
 
-      {/* Cinematic grain overlay */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-15 pointer-events-none z-10"></div>
-
-      {/* Content container */}
-      <div ref={containerRef} className="container mx-auto px-4 relative z-20">
-        {/* Header */}
-        <div className="text-center mb-20">
+      {/* Content container with Framer Motion animation */}
+      <motion.div
+        ref={containerRef}
+        className="container mx-auto px-4 relative z-20"
+        variants={containerVariants}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+      >
+        {/* Header with Framer Motion */}
+        <motion.div className="text-center mb-20" variants={itemVariants}>
           <h2 className="process-title text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-4">
             EDITOR'S WORKFLOW
           </h2>
@@ -170,14 +215,14 @@ export default function ProductionProcess() {
             </span>
             <span className="ml-1 animate-pulse">_</span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Interactive timeline */}
         <div className="relative">
           {/* Vertical timeline line */}
           <div className="timeline-line absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-gradient-to-b from-red-500/20 via-red-500/50 to-transparent origin-top"></div>
 
-          {/* Process cards */}
+          {/* Process cards with Framer Motion */}
           <div className="space-y-32 py-16">
             {productionStages.map((stage, index) => (
               <motion.div
@@ -189,12 +234,26 @@ export default function ProductionProcess() {
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={() => handleMouseLeave(index)}
                 whileHover={{ scale: 1.02 }}
+                variants={cardVariants(index % 2 === 0 ? "left" : "right")}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.5 }}
               >
                 {/* Timeline dot */}
-                <div className="absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full bg-red-500 border-4 border-[#0a0a0a] z-10"></div>
+                <motion.div
+                  className="absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full bg-red-500 border-4 border-[#0a0a0a] z-10"
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  transition={{ delay: index * 0.2, type: "spring" }}
+                  viewport={{ once: true }}
+                />
 
                 {/* Video preview */}
-                <div className="flex-1 relative overflow-hidden rounded-xl border border-white/10 group">
+                <motion.div
+                  className="flex-1 relative overflow-hidden rounded-xl border border-white/10 group"
+                  whileHover={{ scale: 1.03 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70 z-10"></div>
                   <video
                     ref={(el) => (videoRefs.current[index] = el)}
@@ -209,10 +268,16 @@ export default function ProductionProcess() {
                       {stage.title.toUpperCase()}
                     </span>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Stage details */}
-                <div className="flex-1">
+                <motion.div
+                  className="flex-1"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.2 + 0.3 }}
+                  viewport={{ once: true }}
+                >
                   <div className="flex items-center mb-4">
                     <span className="text-3xl mr-3">{stage.icon}</span>
                     <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600">
@@ -223,7 +288,14 @@ export default function ProductionProcess() {
 
                   <ul className="grid grid-cols-2 gap-2 mb-6">
                     {stage.features.map((feature, i) => (
-                      <li key={i} className="flex items-start">
+                      <motion.li
+                        key={i}
+                        className="flex items-start"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.2 + 0.4 + i * 0.1 }}
+                        viewport={{ once: true }}
+                      >
                         <svg
                           className="w-4 h-4 mt-0.5 mr-2 text-red-400 flex-shrink-0"
                           fill="none"
@@ -238,14 +310,18 @@ export default function ProductionProcess() {
                           ></path>
                         </svg>
                         <span className="text-sm text-white/90">{feature}</span>
-                      </li>
+                      </motion.li>
                     ))}
                   </ul>
 
                   <motion.button
-                    className="px-4 py-2.5 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-white transition-all duration-300 flex items-center justify-center text-sm rounded-lg"
+                    className="px-4 py-2.5 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-white transition-all duration-300 flex items-center justify-center text-sm rounded-lg group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ delay: index * 0.2 + 0.8 }}
+                    viewport={{ once: true }}
                   >
                     {stage.cta}
                     <svg
@@ -262,14 +338,20 @@ export default function ProductionProcess() {
                       ></path>
                     </svg>
                   </motion.button>
-                </div>
+                </motion.div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* Footer CTA */}
-        <div className="mt-32 text-center">
+        {/* Footer CTA with Framer Motion */}
+        <motion.div
+          className="mt-32 text-center"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          viewport={{ once: true }}
+        >
           <a href="#contact">
             <motion.button
               className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg relative overflow-hidden group"
@@ -284,8 +366,8 @@ export default function ProductionProcess() {
           <p className="mt-6 text-white/60 text-sm font-mono">
             Let's collaborate on something extraordinary
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Floating UI elements */}
       <div className="absolute top-1/4 left-10 w-32 h-32 rounded-full bg-red-500/10 blur-3xl -z-10"></div>

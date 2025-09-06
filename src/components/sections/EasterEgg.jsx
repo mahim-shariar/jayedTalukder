@@ -172,17 +172,8 @@ export default function EasterEgg() {
     }
   }, [isUnlocked]);
 
-  // Scroll detection
-  const handleScrollToBottom = () => {
-    if (
-      window.innerHeight + window.scrollY >=
-      document.body.offsetHeight - 100
-    ) {
-      unlockEgg();
-    }
-  };
-
-  const unlockEgg = () => {
+  // Function to handle lock click
+  const handleLockClick = () => {
     if (!isUnlocked) {
       // Play lock animation
       gsap.to(lockRef.current, {
@@ -193,8 +184,13 @@ export default function EasterEgg() {
         ease: "power1.inOut",
       });
 
-      setIsUnlocked(true);
-      window.removeEventListener("scroll", handleScrollToBottom);
+      // Show riddle
+      setShowRiddle(true);
+      setCurrentHint(null);
+      setHintIndex(0);
+    } else {
+      // If already unlocked, show the modal directly
+      setShowModal(true);
     }
   };
 
@@ -212,7 +208,7 @@ export default function EasterEgg() {
           if (currentRiddle === 2) {
             setShowLoginModal(true);
           } else {
-            unlockEgg();
+            setIsUnlocked(true);
           }
           setShowRiddle(false);
         },
@@ -338,27 +334,13 @@ export default function EasterEgg() {
     setLoginError(null);
   };
 
-  // Set up scroll listener
-  useEffect(() => {
-    window.addEventListener("scroll", handleScrollToBottom);
-    return () => window.removeEventListener("scroll", handleScrollToBottom);
-  }, []);
-
   return (
     <div className="relative">
       {/* Floating lock button - always visible */}
       <div
         ref={lockRef}
         className="fixed bottom-6 right-6 z-50 cursor-pointer group"
-        onClick={() => {
-          if (!isUnlocked) {
-            setShowRiddle(true);
-            setCurrentHint(null);
-            setHintIndex(0);
-          } else {
-            setShowModal(true);
-          }
-        }}
+        onClick={handleLockClick}
       >
         <div className="relative w-12 h-12 flex items-center justify-center">
           <svg
@@ -920,7 +902,7 @@ export default function EasterEgg() {
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
                                       strokeWidth="1.5"
-                                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.350 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.370 2.370a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.350a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.370 2.370a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.350 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.370-2.370a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.350a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.370-2.370.996.608 2.296.07 2.572-1.065z"
                                     ></path>
                                     <path
                                       strokeLinecap="round"
@@ -1071,7 +1053,7 @@ export default function EasterEgg() {
             {/* Background elements */}
             <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a] z-0"></div>
             <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-15 pointer-events-none z-10"></div>
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0YXNrVHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPgogIDwvZmlsdGVyPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-15 pointer-events-none z-10"></div>
 
             {/* Content container */}
             <div className="container mx-auto px-4 relative z-20 flex items-center justify-center h-full">

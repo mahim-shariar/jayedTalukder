@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { gsap } from "gsap";
 import { MotionPathPlugin } from "gsap/MotionPathPlugin";
+import { getVideoReels } from "../../services/api";
 
 gsap.registerPlugin(MotionPathPlugin);
 
@@ -9,6 +10,7 @@ export default function Hero() {
   const textRef = useRef();
   const filmStripRef = useRef();
   const framesRef = useRef([]);
+  const videoRefs = useRef([]);
   const particlesRef = useRef([]);
   const lightRef = useRef();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -18,12 +20,42 @@ export default function Hero() {
     width: typeof window !== "undefined" ? window.innerWidth : 0,
     height: typeof window !== "undefined" ? window.innerHeight : 0,
   });
+  const [videos, setVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const animationRef = useRef({
     filmTl: null,
     floatTls: [],
     particleTls: [],
     masterTl: null,
   });
+
+  // Fetch videos on component mount
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        setLoading(true);
+        const response = await getVideoReels();
+
+        // Map the API response to the format needed for our component
+        const videoData = response.data.videoReels.map((video) => ({
+          id: video._id,
+          title: video.title,
+          thumbnail: video.thumbnailUrl,
+          videoUrl: video.videoUrl,
+          description: video.description,
+          tags: video.tags || [],
+        }));
+
+        setVideos(videoData);
+      } catch (error) {
+        console.error("Failed to fetch videos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVideos();
+  }, []);
 
   // Handle window resize
   useEffect(() => {
@@ -101,6 +133,8 @@ export default function Hero() {
 
   // Initialize all animations with responsive adjustments
   useEffect(() => {
+    if (videos.length === 0) return; // Don't initialize animations until videos are loaded
+
     createParticles();
 
     // Create master timeline to control all animations
@@ -282,10 +316,13 @@ export default function Hero() {
       animationRef.current.particleTls.forEach((tl) => tl.kill());
       if (animationRef.current.filmTl) animationRef.current.filmTl.kill();
     };
-  }, [windowSize.width]); // Re-run effect when window size changes
+  }, [windowSize.width, videos]); // Re-run effect when window size changes or videos are loaded
 
   const handleFrameHover = (index, isHovering) => {
     if (windowSize.width < 768) return; // Disable hover effects on mobile
+
+    const videoIndex = index % videos.length;
+    const videoElement = videoRefs.current[index];
 
     if (isHovering) {
       setActiveFrame(index);
@@ -294,6 +331,16 @@ export default function Hero() {
         duration: 0.4,
         ease: "power2.out",
       });
+
+      // Play video on hover
+      if (videoElement && videos[videoIndex]?.videoUrl) {
+        videoElement.play().catch((e) => console.log("Video play failed:", e));
+        gsap.to(videoElement, {
+          opacity: 1,
+          duration: 0.5,
+          ease: "power2.out",
+        });
+      }
     } else {
       setActiveFrame(null);
       gsap.to(framesRef.current[index], {
@@ -301,19 +348,25 @@ export default function Hero() {
         duration: 0.6,
         ease: "power2.out",
       });
+
+      // Pause video and show thumbnail when not hovering
+      if (videoElement) {
+        videoElement.pause();
+        videoElement.currentTime = 0;
+        gsap.to(videoElement, {
+          opacity: 0,
+          duration: 0.3,
+          ease: "power2.out",
+        });
+      }
     }
   };
 
-  const frames = [
-    "/images/frames/1.jpg",
-    "/images/frames/2.jpg",
-    "/images/frames/3.jpg",
-    "/images/frames/4.jpg",
-    "/images/frames/5.jpg",
-    "/images/frames/6.jpg",
-    "/images/frames/7.jpg",
-    "/images/frames/8.jpg",
-  ];
+  // Use actual videos from API or default to placeholder if loading
+  const frames =
+    videos.length > 0
+      ? videos.map((video) => video.thumbnail)
+      : Array(8).fill("/images/frames/placeholder.jpg");
 
   // Responsive frame dimensions
   const getFrameDimensions = () => {
@@ -384,48 +437,69 @@ export default function Hero() {
           transformStyle: "preserve-3d",
         }}
       >
-        {[...frames, ...frames].map((frame, i) => (
-          <div
-            key={i}
-            ref={(el) => (framesRef.current[i] = el)}
-            className={`inline-block bg-neutral-900 overflow-hidden rounded-md shadow-lg transition-all duration-300 ${
-              windowSize.width >= 768 ? "cursor-pointer" : ""
-            }`}
-            onMouseEnter={() =>
-              windowSize.width >= 768 && handleFrameHover(i, true)
-            }
-            onMouseLeave={() =>
-              windowSize.width >= 768 && handleFrameHover(i, false)
-            }
-            style={{
-              width: frameStyle.width,
-              height: frameStyle.height,
-              margin: frameStyle.margin,
-              transformOrigin: "center center",
-            }}
-          >
+        {[...frames, ...frames].map((frame, i) => {
+          const videoIndex = i % videos.length;
+          const video = videos[videoIndex] || {};
+
+          return (
             <div
-              className="w-full h-full bg-cover bg-center"
+              key={i}
+              ref={(el) => (framesRef.current[i] = el)}
+              className={`inline-block bg-neutral-900 overflow-hidden rounded-md shadow-lg transition-all duration-300 ${
+                windowSize.width >= 768 ? "cursor-pointer" : ""
+              }`}
+              onMouseEnter={() =>
+                windowSize.width >= 768 && handleFrameHover(i, true)
+              }
+              onMouseLeave={() =>
+                windowSize.width >= 768 && handleFrameHover(i, false)
+              }
               style={{
-                backgroundImage: `url(${frame})`,
-                backgroundColor: "#111",
+                width: frameStyle.width,
+                height: frameStyle.height,
+                margin: frameStyle.margin,
+                transformOrigin: "center center",
               }}
-            />
-            <div className="absolute inset-0 border border-neutral-800/50 pointer-events-none"></div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black to-transparent pointer-events-none"></div>
-            <div className="absolute bottom-3 left-3 text-xs text-neutral-300 font-mono pointer-events-none">
-              Clip_{i + 1}.mp4
+            >
+              {/* Video element that plays on hover */}
+              {video.videoUrl && (
+                <video
+                  ref={(el) => (videoRefs.current[i] = el)}
+                  className="absolute inset-0 w-full h-full object-cover opacity-0"
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                >
+                  <source src={video.videoUrl} type="video/mp4" />
+                </video>
+              )}
+
+              {/* Thumbnail background */}
+              <div
+                className="w-full h-full bg-cover bg-center"
+                style={{
+                  backgroundImage: `url(${frame})`,
+                  backgroundColor: "#111",
+                }}
+              />
+
+              <div className="absolute inset-0 border border-neutral-800/50 pointer-events-none"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black to-transparent pointer-events-none"></div>
+              <div className="absolute bottom-3 left-3 text-xs text-neutral-300 font-mono pointer-events-none">
+                {video.title ? `${video.title}.mp4` : `Clip_${i + 1}.mp4`}
+              </div>
+              <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
             </div>
-            <div className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Content with responsive text sizing */}
+      {/* Improved Content with better visibility */}
       <div
         ref={textRef}
-        className="relative z-20 text-center px-4 w-full"
+        className="relative z-30 text-center px-4 w-full"
         style={{
           maxWidth:
             windowSize.width < 768
@@ -436,66 +510,71 @@ export default function Hero() {
           paddingBottom: windowSize.width < 768 ? "60px" : "0",
         }}
       >
-        <h1
-          className="font-bold mb-4 md:mb-6 text-neutral-100 tracking-tight"
-          style={{
-            fontSize:
-              windowSize.width < 640
-                ? "2.25rem"
-                : windowSize.width < 768
-                ? "2.5rem"
-                : windowSize.width < 1024
-                ? "4rem"
-                : "5rem",
-            lineHeight: "1.1",
-          }}
-        >
-          <span className="block">Visual Storytelling</span>
-          <span className="block text-red-500 mt-2 md:mt-4">
-            Through the Lens
-          </span>
-        </h1>
-
-        <p
-          className="text-neutral-300 mb-6 md:mb-10 mx-auto leading-relaxed"
-          style={{
-            fontSize: windowSize.width < 768 ? "1rem" : "1.25rem",
-            maxWidth: windowSize.width < 768 ? "100%" : "42rem",
-          }}
-        >
-          Transforming raw footage into{" "}
-          <span className="text-red-400 font-medium">
-            compelling narratives
-          </span>{" "}
-          that captivate audiences.
-        </p>
-
-        <div className="flex gap-3 md:gap-4 justify-center flex-wrap">
-          <a
-            href="#showreel"
-            className="px-6 py-3 md:px-8 md:py-4 bg-red-500 text-neutral-50 rounded-full hover:bg-red-600 transition-all transform hover:scale-[1.03] flex items-center group will-change-transform text-sm md:text-base"
+        {/* Text container with semi-transparent background for better readability */}
+        <div className="inline-block bg-black/40 backdrop-blur-sm rounded-2xl px-6 py-4 md:px-8 md:py-6 border border-white/10">
+          <h1
+            className="font-bold mb-4 md:mb-6 text-neutral-100 tracking-tight"
+            style={{
+              fontSize:
+                windowSize.width < 640
+                  ? "2.25rem"
+                  : windowSize.width < 768
+                  ? "2.5rem"
+                  : windowSize.width < 1024
+                  ? "3.5rem"
+                  : "4.5rem",
+              lineHeight: "1.1",
+              textShadow: "0 2px 10px rgba(0, 0, 0, 0.7)",
+            }}
           >
-            <span>View Portfolio</span>
-            <svg
-              className="w-4 h-4 md:w-5 md:h-5 ml-2 transition-transform group-hover:translate-x-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            <span className="block">Visual Storytelling</span>
+            <span className="block text-red-500 mt-2 md:mt-4">
+              Through the Lens
+            </span>
+          </h1>
+
+          <p
+            className="text-neutral-200 mb-6 md:mb-8 mx-auto leading-relaxed"
+            style={{
+              fontSize: windowSize.width < 768 ? "1rem" : "1.2rem",
+              maxWidth: windowSize.width < 768 ? "100%" : "42rem",
+              textShadow: "0 1px 5px rgba(0, 0, 0, 0.7)",
+            }}
+          >
+            Transforming raw footage into{" "}
+            <span className="text-red-400 font-medium">
+              compelling narratives
+            </span>{" "}
+            that captivate audiences.
+          </p>
+
+          <div className="flex gap-3 md:gap-4 justify-center flex-wrap">
+            <a
+              href="#showreel"
+              className="px-6 py-3 md:px-8 md:py-4 bg-red-500 text-neutral-50 rounded-full hover:bg-red-600 transition-all transform hover:scale-[1.03] flex items-center group will-change-transform text-sm md:text-base shadow-lg"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 5l7 7-7 7"
-              ></path>
-            </svg>
-          </a>
-          <a
-            href="#contact"
-            className="px-6 py-3 md:px-8 md:py-4 bg-transparent border border-neutral-600 text-neutral-200 rounded-full hover:bg-neutral-100 hover:text-neutral-900 transition-all transform hover:scale-[1.03] will-change-transform text-sm md:text-base"
-          >
-            Get in Touch
-          </a>
+              <span>View Portfolio</span>
+              <svg
+                className="w-4 h-4 md:w-5 md:h-5 ml-2 transition-transform group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5l7 7-7 7"
+                ></path>
+              </svg>
+            </a>
+            <a
+              href="#contact"
+              className="px-6 py-3 md:px-8 md:py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-neutral-200 rounded-full hover:bg-white hover:text-neutral-900 transition-all transform hover:scale-[1.03] will-change-transform text-sm md:text-base shadow-lg"
+            >
+              Get in Touch
+            </a>
+          </div>
         </div>
       </div>
 

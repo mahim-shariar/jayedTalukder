@@ -3,13 +3,7 @@ import { useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import confetti from "canvas-confetti";
 import { sendEmail } from "../../utils/emailService";
-import {
-  FaPhone,
-  FaEnvelope,
-  FaWhatsapp,
-  FaLinkedin,
-  FaTwitter,
-} from "react-icons/fa";
+import { FaPhone, FaEnvelope, FaWhatsapp } from "react-icons/fa";
 import { FiSend, FiLoader } from "react-icons/fi";
 import { BsStars, BsPencil } from "react-icons/bs";
 import { HiOutlineLocationMarker } from "react-icons/hi";
@@ -29,31 +23,31 @@ export default function Contact() {
     offset: ["start end", "end start"],
   });
 
-  // Scroll-based animations
-  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.8], [0, 1, 1]);
-  const y = useTransform(scrollYProgress, [0, 0.3], [80, 0]);
+  // Smoother scroll-based animations
+  const opacity = useTransform(scrollYProgress, [0, 0.2, 0.9], [0, 1, 1]);
+  const y = useTransform(scrollYProgress, [0, 0.2], [40, 0]);
 
   const socialLinks = [
     {
-      icon: <FaPhone className="text-2xl h-14 my-auto " />,
+      icon: <FaPhone className="text-xl" />,
       platform: "Call",
       handle: "+8801906979013",
       url: "tel:+8801906979013",
     },
     {
-      icon: <FaEnvelope className="text-2xl  h-14 my-auto  " />,
+      icon: <FaEnvelope className="text-xl" />,
       platform: "Email",
       handle: "jayedbinkibria@gmail.com",
       url: "mailto:jayedbinkibria@gmail.com",
     },
     {
-      icon: <FaWhatsapp className="text-2xl text-green-600  h-14 my-auto " />,
+      icon: <FaWhatsapp className="text-xl text-green-600" />,
       platform: "WhatsApp",
       handle: "01794598569",
       url: "https://wa.me/8801794598569",
     },
     {
-      icon: <FaSquareXTwitter className="text-2xl  h-14 my-auto " />,
+      icon: <FaSquareXTwitter className="text-xl" />,
       platform: "X",
       handle: "jayedbinkibria",
       url: "https://x.com/jayedbinkibria",
@@ -79,13 +73,12 @@ export default function Contact() {
         message: formData.message,
       });
 
-      // Show success effects
+      // Confetti effect
       confetti({
-        particleCount: 150,
+        particleCount: 120,
         spread: 80,
         origin: { y: 0.6 },
-        colors: ["#ef4444", "#f43f5e", "#dc2626"],
-        shapes: ["circle", "star"],
+        colors: ["#ff6b6b", "#ff8e8e", "#ff5252"],
       });
 
       setIsSubmitted(true);
@@ -99,95 +92,102 @@ export default function Contact() {
     }
   };
 
-  const generateStars = () => {
-    const starColors = [
-      "#ff0000",
-      "#ff3333",
-      "#ff6666",
-      "#ff9999",
-      "#ffcccc",
-      "#ff1a1a",
-      "#ff4d4d",
-      "#ff8080",
-      "#ffb3b3",
-      "#ffe6e6",
-    ];
+  // Generate geometric shapes for background
+  const generateGeometricShapes = () => {
+    const shapes = [];
+    const colors = ["#ff6b6b", "#ff5252", "#ff3838", "#ff1a1a"];
 
-    return [...Array(120)].map((_, i) => {
-      const size = Math.random() * 4;
-      const color = starColors[Math.floor(Math.random() * starColors.length)];
-      const glowIntensity = Math.random() * 0.8 + 0.2;
+    for (let i = 0; i < 12; i++) {
+      const size = Math.random() * 80 + 20;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const rotation = Math.random() * 360;
+      const isCircle = Math.random() > 0.5;
 
-      return (
+      shapes.push(
         <motion.div
-          key={i}
-          className="absolute rounded-full"
+          key={`shape-${i}`}
+          className={`absolute ${isCircle ? "rounded-full" : ""} opacity-5`}
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
             width: `${size}px`,
             height: `${size}px`,
             backgroundColor: color,
-            opacity: glowIntensity,
-            boxShadow: `0 0 ${size * 3}px ${size}px rgba(239, 68, 68, ${
-              glowIntensity * 0.5
-            })`,
-            filter: `blur(${size / 4}px)`,
+            rotate: rotation,
           }}
           animate={{
-            opacity: [glowIntensity * 0.3, glowIntensity, glowIntensity * 0.3],
-            boxShadow: [
-              `0 0 ${size * 2}px ${size / 2}px rgba(239, 68, 68, ${
-                glowIntensity * 0.3
-              })`,
-              `0 0 ${size * 4}px ${size}px rgba(239, 68, 68, ${
-                glowIntensity * 0.7
-              })`,
-              `0 0 ${size * 2}px ${size / 2}px rgba(239, 68, 68, ${
-                glowIntensity * 0.3
-              })`,
-            ],
+            y: [0, -20, 0],
+            x: [0, Math.random() * 10 - 5, 0],
+            rotate: [rotation, rotation + 45, rotation],
           }}
           transition={{
-            duration: Math.random() * 6 + 3,
+            duration: Math.random() * 15 + 15,
             repeat: Infinity,
-            repeatType: "reverse",
             ease: "easeInOut",
           }}
         />
       );
-    });
+    }
+
+    return shapes;
   };
 
-  const generateShootingStars = () => {
+  // Generate floating grid dots
+  const generateGridDots = () => {
+    const dots = [];
+
+    for (let i = 0; i < 8; i++) {
+      for (let j = 0; j < 8; j++) {
+        dots.push(
+          <motion.div
+            key={`dot-${i}-${j}`}
+            className="absolute rounded-full bg-red-500 opacity-10"
+            style={{
+              left: `${12.5 * j + 6.25}%`,
+              top: `${12.5 * i + 6.25}%`,
+              width: "4px",
+              height: "4px",
+            }}
+            animate={{
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay: i * j * 0.1,
+              ease: "easeInOut",
+            }}
+          />
+        );
+      }
+    }
+
+    return dots;
+  };
+
+  // Generate animated lines
+  const generateAnimatedLines = () => {
     return [...Array(6)].map((_, i) => {
-      const startX = Math.random() * 100;
-      const startY = Math.random() * 30;
-      const angle = Math.random() * 45 - 22.5;
-      const length = Math.random() * 100 + 100;
+      const direction = i % 2 === 0 ? "horizontal" : "vertical";
+      const position = Math.random() * 100;
 
       return (
         <motion.div
-          key={`shooting-${i}`}
-          className="absolute h-[2px] bg-gradient-to-r from-transparent via-red-500 to-transparent"
+          key={`line-${i}`}
+          className={`absolute bg-gradient-to-r from-red-500/10 to-transparent ${
+            direction === "horizontal" ? "w-full h-px" : "h-full w-px"
+          }`}
           style={{
-            left: `${startX}%`,
-            top: `${startY}%`,
-            width: `${length}px`,
-            rotate: angle,
-            filter: "blur(1px)",
+            [direction === "horizontal" ? "top" : "left"]: `${position}%`,
           }}
-          initial={{ x: -length, y: -length / 2, opacity: 0 }}
           animate={{
-            x: [`-${length}px`, `${length}px`],
-            y: [`-${length / 2}px`, `${length / 2}px`],
-            opacity: [0, 0.8, 0],
+            opacity: [0, 0.3, 0],
           }}
           transition={{
-            duration: Math.random() * 2 + 1,
+            duration: 4,
             repeat: Infinity,
-            repeatDelay: Math.random() * 15 + 10,
-            ease: "linear",
+            delay: i * 0.7,
+            ease: "easeInOut",
           }}
         />
       );
@@ -197,16 +197,93 @@ export default function Contact() {
   return (
     <section
       ref={sectionRef}
-      className="contact-section py-32 bg-[#0a0a0a] text-white relative overflow-hidden"
+      className="contact-section py-28 bg-gradient-to-b from-[#0a0a0a] to-[#1a1a1a] text-white relative overflow-hidden"
       id="contact"
     >
-      {/* Grid overlay */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjAzIiBudW1PY3RhdmVzPSIyIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-20 pointer-events-none z-0"></div>
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 overflow-hidden z-0">
+        <motion.div
+          className="absolute top-0 left-0 w-full h-full"
+          animate={{
+            background: [
+              "radial-gradient(circle at 10% 20%, rgba(255, 107, 107, 0.1) 0%, transparent 20%)",
+              "radial-gradient(circle at 30% 70%, rgba(255, 107, 107, 0.1) 0%, transparent 20%)",
+              "radial-gradient(circle at 70% 30%, rgba(255, 107, 107, 0.1) 0%, transparent 20%)",
+              "radial-gradient(circle at 10% 20%, rgba(255, 107, 107, 0.1) 0%, transparent 20%)",
+            ],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+      </div>
 
-      {/* Red starfield particles - full width cinematic effect */}
+      {/* Subtle grid overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-10 pointer-events-none z-0"></div>
+
+      {/* Animated geometric shapes */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        {generateStars()}
-        {generateShootingStars()}
+        {generateGeometricShapes()}
+      </div>
+
+      {/* Animated grid dots */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {generateGridDots()}
+      </div>
+
+      {/* Animated lines */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {generateAnimatedLines()}
+      </div>
+
+      {/* Pulse circles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={`pulse-${i}`}
+            className="absolute rounded-full border border-red-500/20"
+            style={{
+              left: `${20 + i * 30}%`,
+              top: `${30 + i * 20}%`,
+              width: `${100 + i * 100}px`,
+              height: `${100 + i * 100}px`,
+            }}
+            animate={{
+              scale: [0.8, 1.2, 0.8],
+              opacity: [0, 0.1, 0],
+            }}
+            transition={{
+              duration: 6 + i * 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 1.5,
+            }}
+          />
+        ))}
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={`pulse2-${i}`}
+            className="absolute rounded-full border border-red-500/20"
+            style={{
+              right: `${20 + i * 30}%`,
+              bottom: `${30 + i * 20}%`,
+              width: `${100 + i * 100}px`,
+              height: `${100 + i * 100}px`,
+            }}
+            animate={{
+              scale: [0.8, 1.2, 0.8],
+              opacity: [0, 0.1, 0],
+            }}
+            transition={{
+              duration: 8 + i * 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 2,
+            }}
+          />
+        ))}
       </div>
 
       <motion.div
@@ -214,21 +291,21 @@ export default function Contact() {
         style={{ opacity, y }}
       >
         {/* Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-16">
           <motion.h2
-            className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-6 tracking-tight"
+            className="text-5xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-6"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             viewport={{ once: true, margin: "-100px" }}
           >
-            CONTACT
+            Let's Connect
           </motion.h2>
           <motion.div
-            className="font-mono text-red-400/80 text-xl"
+            className="font-mono text-red-400/80 text-lg"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
+            transition={{ delay: 0.3, duration: 0.6, ease: "easeOut" }}
             viewport={{ once: true }}
           >
             <span className="inline-block mr-2">Jayed&gt;</span>
@@ -240,88 +317,94 @@ export default function Contact() {
         </div>
 
         {/* Contact grid */}
-        <div className="contact-grid grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Contact form */}
           <motion.div
-            className="bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border border-white/5 rounded-2xl p-8 backdrop-blur-sm shadow-2xl shadow-red-900/20 hover:shadow-red-500/30 transition-all duration-500"
+            className="bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border border-white/10 rounded-2xl p-6 backdrop-blur-sm shadow-xl shadow-red-900/10 hover:shadow-red-500/20 transition-all duration-500"
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
             viewport={{ once: true, margin: "-50px" }}
+            whileHover={{ y: -3 }}
           >
-            <h3 className="text-2xl font-medium mb-6 flex items-center">
-              <BsPencil className="text-red-400 mr-3 text-xl" />
+            <h3 className="text-xl font-medium mb-6 flex items-center">
+              <BsPencil className="text-red-400 mr-3" />
               <span>Send a Message</span>
             </h3>
 
             {isSubmitted ? (
-              <div className="text-center py-8">
-                <BsStars className="text-5xl mb-4 mx-auto text-red-400" />
-                <h4 className="text-xl font-medium mb-2">Message Sent!</h4>
+              <motion.div
+                className="text-center py-8"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <BsStars className="text-4xl mb-4 mx-auto text-red-400" />
+                <h4 className="text-lg font-medium mb-2">Message Sent!</h4>
                 <p className="text-white/70">I'll get back to you soon</p>
-              </div>
+              </motion.div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
+                  transition={{ delay: 0.2, ease: "easeOut" }}
                   viewport={{ once: true }}
                 >
                   <input
                     type="text"
                     name="name"
                     placeholder="Your Name"
-                    className="w-full bg-black/30 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40"
+                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40"
                     required
                     value={formData.name}
                     onChange={handleChange}
                   />
                 </motion.div>
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
+                  transition={{ delay: 0.3, ease: "easeOut" }}
                   viewport={{ once: true }}
                 >
                   <input
                     type="email"
                     name="email"
                     placeholder="Email Address"
-                    className="w-full bg-black/30 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40"
+                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40"
                     required
                     value={formData.email}
                     onChange={handleChange}
                   />
                 </motion.div>
                 <motion.div
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -10 }}
                   whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}
+                  transition={{ delay: 0.4, ease: "easeOut" }}
                   viewport={{ once: true }}
                 >
                   <textarea
                     rows="4"
                     name="message"
                     placeholder="Tell me about your project..."
-                    className="w-full bg-black/30 border-b border-white/10 px-0 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40"
+                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 transition-all placeholder-white/40 resize-none"
                     required
                     value={formData.message}
                     onChange={handleChange}
                   ></textarea>
                 </motion.div>
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
+                  transition={{ delay: 0.5, ease: "easeOut" }}
                   viewport={{ once: true }}
                 >
                   <button
                     type="submit"
-                    className="w-full py-4 bg-gradient-to-r from-red-600 to-red-800 text-white font-medium rounded-lg hover:from-red-500 hover:to-red-700 transition-all duration-300 flex items-center justify-center group relative overflow-hidden mt-6"
+                    className="w-full py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-medium rounded-lg hover:from-red-500 hover:to-red-600 transition-all duration-300 flex items-center justify-center group mt-4"
                     disabled={isLoading}
                   >
-                    <span className="relative z-10 flex items-center">
+                    <span className="flex items-center">
                       {isLoading ? (
                         <>
                           <FiLoader className="mr-2 animate-spin" />
@@ -330,11 +413,10 @@ export default function Contact() {
                       ) : (
                         <>
                           <FiSend className="mr-2" />
-                          <span>Launch Project</span>
+                          <span>Send Message</span>
                         </>
                       )}
                     </span>
-                    <span className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-0"></span>
                   </button>
                 </motion.div>
               </form>
@@ -343,7 +425,7 @@ export default function Contact() {
 
           {/* Contact methods */}
           <motion.div
-            className="space-y-6"
+            className="space-y-5"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ staggerChildren: 0.1 }}
@@ -353,25 +435,30 @@ export default function Contact() {
               <motion.a
                 key={index}
                 href={link.url}
-                className="block bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border border-white/5 rounded-2xl p-6 backdrop-blur-sm hover:border-red-500/30 transition-all duration-300 group"
-                initial={{ opacity: 0, y: 30 }}
+                className="block bg-gradient-to-br from-[#0f0f0f] to-[#1a1a1a] border border-white/10 rounded-xl p-5 backdrop-blur-sm hover:border-red-500/30 transition-all duration-300 group"
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
+                transition={{
+                  duration: 0.5,
+                  delay: index * 0.1 + 0.2,
+                  ease: "easeOut",
+                }}
                 viewport={{ once: true }}
                 target="_blank"
                 rel="noopener noreferrer"
+                whileHover={{ y: -3 }}
               >
-                <div className="flex items-start">
-                  <span className="text-xl mr-4 group-hover:text-red-400 transition-colors">
+                <div className="flex items-center">
+                  <span className="text-lg mr-4 group-hover:text-red-400 transition-colors p-2 bg-black/20 rounded-lg">
                     {link.icon}
                   </span>
-                  <div>
-                    <h4 className="text-lg font-medium group-hover:text-red-400 transition-colors">
+                  <div className="flex-1">
+                    <h4 className="font-medium group-hover:text-red-400 transition-colors">
                       {link.platform}
                     </h4>
-                    <p className="text-white/70 mt-1">{link.handle}</p>
+                    <p className="text-white/70 text-sm mt-1">{link.handle}</p>
                   </div>
-                  <span className="ml-auto text-white/30 group-hover:text-red-400 transition-colors">
+                  <span className="text-white/30 group-hover:text-red-400 transition-colors">
                     →
                   </span>
                 </div>
@@ -385,20 +472,40 @@ export default function Contact() {
           className="mt-12 text-center text-white/60 font-mono text-sm"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.6, ease: "easeOut" }}
           viewport={{ once: true }}
         >
-          <div className="flex items-center justify-center">
-            <HiOutlineLocationMarker className="mr-2" />
+          <div className="flex items-center justify-center mb-1">
+            <HiOutlineLocationMarker className="mr-2 text-red-400" />
             <p>Studio Location: Dhaka, Bangladesh</p>
           </div>
-          <p className="mt-1">Available Worldwide for Projects</p>
+          <p className="text-white/40">Available Worldwide for Projects</p>
         </motion.div>
       </motion.div>
 
-      {/* Glowing accents */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-red-500/10 rounded-full blur-[100px] -z-10"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] -z-10"></div>
+      {/* Subtle glowing accents */}
+      <motion.div
+        className="absolute top-1/4 left-1/4 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -z-10"
+        animate={{
+          opacity: [0.1, 0.15, 0.1],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      <motion.div
+        className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-red-500/10 rounded-full blur-[80px] -z-10"
+        animate={{
+          opacity: [0.1, 0.15, 0.1],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
     </section>
   );
 }

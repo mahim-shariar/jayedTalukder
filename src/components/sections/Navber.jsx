@@ -5,7 +5,7 @@ import {
   useScroll,
   useMotionValueEvent,
 } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,6 +17,7 @@ export default function Navbar() {
   const controls = useAnimation();
   const { scrollY } = useScroll();
   const reelBtnControls = useAnimation();
+  const navigate = useNavigate();
 
   // Check login status on mount
   useEffect(() => {
@@ -92,11 +93,15 @@ export default function Navbar() {
     setShowProfileDropdown(false);
   };
 
-  const navLinks = [
-    { name: "Home", path: "#home" },
-    { name: "About", path: "#about" },
-    { name: "Showreel", path: "#showreel" },
+  const handleNavigation = (path) => {
+    navigate(path);
+    setIsMenuOpen(false);
+  };
 
+  const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "About", path: "#about" },
+    { name: "Showreel", path: "/projects" },
     { name: "Testimonials", path: "#testimonials" },
     { name: "Contact", path: "#contact" },
   ];
@@ -115,7 +120,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="#home" className="flex items-center group">
+            <Link to="/" className="flex items-center group">
               <div className="relative w-8 h-8 mr-2">
                 <div className="absolute inset-0 rounded-full border-2 border-white/70 group-hover:border-red-500 transition-colors duration-300"></div>
                 <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-white/80 group-hover:bg-red-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-colors duration-300"></div>
@@ -125,19 +130,28 @@ export default function Navbar() {
               <span className="text-white font-bold text-lg tracking-tight group-hover:text-red-400 transition-colors duration-300">
                 JAYED
               </span>
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <div key={link.name} className="relative">
-                <a
-                  href={link.path}
-                  className="text-white/80 hover:text-red-400 font-medium text-sm uppercase tracking-wider transition-colors duration-300 relative"
-                >
-                  {link.name}
-                </a>
+                {link.path.startsWith("#") ? (
+                  <a
+                    href={link.path}
+                    className="text-white/80 hover:text-red-400 font-medium text-sm uppercase tracking-wider transition-colors duration-300 relative"
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <Link
+                    to={link.path}
+                    className="text-white/80 hover:text-red-400 font-medium text-sm uppercase tracking-wider transition-colors duration-300 relative"
+                  >
+                    {link.name}
+                  </Link>
+                )}
                 <motion.div
                   className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#f43f5e] to-[#f43f5e80]"
                   initial={{ scaleX: 0, transformOrigin: "left center" }}
@@ -151,14 +165,14 @@ export default function Navbar() {
           {/* Right side buttons */}
           <div className="flex items-center space-x-4">
             {/* Watch Reel CTA Button */}
-            <motion.a
+            <motion.button
               animate={reelBtnControls}
-              href="#showreel"
+              onClick={() => handleNavigation("/projects")}
               className="hidden md:block px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold uppercase tracking-wider rounded-sm hover:from-red-600 hover:to-red-700 transition-all duration-300 relative overflow-hidden"
             >
               <span className="relative z-10">Watch Reel</span>
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-            </motion.a>
+            </motion.button>
 
             {/* Profile dropdown */}
             {isLoggedIn && (
@@ -191,20 +205,20 @@ export default function Navbar() {
                     transition={{ duration: 0.2 }}
                     className="absolute right-0 mt-2 w-48 bg-[#0a0a0a] border border-white/10 rounded-md shadow-lg overflow-hidden z-50"
                   >
-                    <a
-                      href="/dashboard"
+                    <Link
+                      to="/dashboard"
                       className="block px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200"
                       onClick={() => setShowProfileDropdown(false)}
                     >
                       Dashboard
-                    </a>
-                    <a
-                      href="/dashboard/profile"
+                    </Link>
+                    <Link
+                      to="/dashboard/profile"
                       className="block px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200 border-t border-white/5"
                       onClick={() => setShowProfileDropdown(false)}
                     >
                       Profile
-                    </a>
+                    </Link>
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200 border-t border-white/5"
@@ -265,31 +279,42 @@ export default function Navbar() {
         <div className="container mx-auto px-4">
           <nav className="flex flex-col space-y-4">
             {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.path}
-                className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {link.name}
-              </a>
+              <div key={link.name}>
+                {link.path.startsWith("#") ? (
+                  <a
+                    href={link.path}
+                    className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <Link
+                    to={link.path}
+                    className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                )}
+              </div>
             ))}
             {isLoggedIn && (
               <>
-                <a
-                  href="/dashboard"
+                <Link
+                  to="/dashboard"
                   className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
-                </a>
-                <a
-                  href="/dashboard/profile"
+                </Link>
+                <Link
+                  to="/dashboard/profile"
                   className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Profile
-                </a>
+                </Link>
                 <button
                   onClick={() => {
                     handleLogout();
@@ -301,13 +326,12 @@ export default function Navbar() {
                 </button>
               </>
             )}
-            <a
-              href="#showreel"
+            <button
+              onClick={() => handleNavigation("/projects")}
               className="mt-4 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold uppercase tracking-wider rounded-sm hover:from-red-600 hover:to-red-700 transition-all duration-300 text-center"
-              onClick={() => setIsMenuOpen(false)}
             >
               Watch Reel
-            </a>
+            </button>
           </nav>
         </div>
       </motion.div>
