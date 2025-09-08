@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import RootLayout from "./layouts/RootLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -40,19 +40,29 @@ const router = createBrowserRouter([
   {
     path: "dashboard",
     element: (
-      <Suspense fallback={<DelayedSpinner />}>
-        <DashboardLayout />
-      </Suspense>
+      <PrivateRoute>
+        <Suspense fallback={<DelayedSpinner />}>
+          <DashboardLayout />
+        </Suspense>
+      </PrivateRoute>
     ),
     errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
-        element: <Dashboard />,
+        element: (
+          <Suspense fallback={<DelayedSpinner />}>
+            <Dashboard />
+          </Suspense>
+        ),
       },
       {
         path: "profile",
-        element: <ProfilePage />,
+        element: (
+          <Suspense fallback={<DelayedSpinner />}>
+            <ProfilePage />
+          </Suspense>
+        ),
       },
     ],
   },
