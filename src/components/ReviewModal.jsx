@@ -5,6 +5,7 @@ import {
   FiLoader,
   FiUpload,
   FiCheckCircle,
+  FiAward,
 } from "react-icons/fi";
 
 const modalVariants = {
@@ -32,6 +33,7 @@ export default function ReviewModal({
   editingReview,
 }) {
   if (!show) return null;
+
   return (
     <div className="fixed z-50 inset-0 overflow-y-auto">
       <motion.div
@@ -174,6 +176,34 @@ export default function ReviewModal({
                     </label>
                   </div>
                 </div>
+              </div>
+
+              {/* Is Best Checkbox */}
+              <div className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center h-5">
+                  <input
+                    id="isBest"
+                    name="isBest"
+                    type="checkbox"
+                    checked={reviewForm.isBest}
+                    onChange={handleReviewChange}
+                    className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  />
+                </div>
+                <div className="ml-3 flex items-center">
+                  <FiAward className="h-5 w-5 text-red-500 mr-2" />
+                  <label
+                    htmlFor="isBest"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Mark as Best Review
+                  </label>
+                </div>
+                {reviewForm.isBest && (
+                  <span className="ml-auto bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    Featured
+                  </span>
+                )}
               </div>
 
               {/* Footer Buttons */}

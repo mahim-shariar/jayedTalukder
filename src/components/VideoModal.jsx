@@ -1,5 +1,11 @@
 import { motion } from "framer-motion";
-import { FiEdit, FiLoader, FiUpload, FiCheckCircle } from "react-icons/fi";
+import {
+  FiEdit,
+  FiLoader,
+  FiUpload,
+  FiCheckCircle,
+  FiStar,
+} from "react-icons/fi";
 
 const modalVariants = {
   initial: { y: 20, opacity: 0 },
@@ -32,6 +38,15 @@ export default function VideoModal({
   const handleSubmit = (e) => {
     e.preventDefault();
     submitVideoForm(e);
+  };
+
+  // Handle checkbox change specifically
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setVideoForm({
+      ...videoForm,
+      [name]: checked,
+    });
   };
 
   return (
@@ -254,6 +269,50 @@ export default function VideoModal({
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Featured Video Checkbox */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <label className="flex items-center cursor-pointer">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      name="isBest"
+                      checked={videoForm.isBest}
+                      onChange={handleCheckboxChange}
+                      className="sr-only"
+                    />
+                    <div
+                      className={`block w-10 h-6 rounded-full transition-colors ${
+                        videoForm.isBest ? "bg-red-500" : "bg-gray-300"
+                      }`}
+                    />
+                    <div
+                      className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${
+                        videoForm.isBest ? "transform translate-x-4" : ""
+                      }`}
+                    />
+                  </div>
+                  <div className="ml-3 flex items-center">
+                    <FiStar
+                      className={`h-5 w-5 mr-2 ${
+                        videoForm.isBest ? "text-yellow-400" : "text-gray-400"
+                      }`}
+                    />
+                    <span className="text-sm font-medium text-gray-700">
+                      Mark as featured video
+                    </span>
+                    {videoForm.isBest && (
+                      <span className="ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">
+                        Featured
+                      </span>
+                    )}
+                  </div>
+                </label>
+                <p className="text-xs text-gray-500 mt-2 ml-13">
+                  Featured videos will be highlighted and can be filtered in the
+                  dashboard.
+                </p>
               </div>
 
               {/* Footer Buttons */}

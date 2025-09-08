@@ -32,6 +32,8 @@ const Dashboard = () => {
   const [reviews, setReviews] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showOnlyBest, setShowOnlyBest] = useState(false);
+  const [showOnlyBestReviews, setShowOnlyBestReviews] = useState(false); // New state for review filtering
 
   // Modal states
   const [showVideoModal, setShowVideoModal] = useState(false);
@@ -66,6 +68,7 @@ const Dashboard = () => {
     thumbnailCloudId: "",
     category: "",
     tags: "",
+    isBest: false,
   });
 
   const [reviewForm, setReviewForm] = useState({
@@ -74,6 +77,7 @@ const Dashboard = () => {
     screenshot: "",
     screenshotId: "",
     userName: "",
+    isBest: false, // Added isBest field
   });
 
   const [categoryForm, setCategoryForm] = useState({
@@ -95,27 +99,48 @@ const Dashboard = () => {
     fetchCategories();
   }, []);
 
+  // Function to fetch videos with optional filter
+  const fetchVideos = async (filterBest = false) => {
+    try {
+      setLoading(true);
+      let query = "";
+      if (filterBest) {
+        query = { isBest: true };
+      }
+      const res = await getVideoReels(query);
+      setVideos(res.data.videoReels);
+    } catch (err) {
+      toast.error("Failed to fetch videos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to fetch reviews with optional filter
+  const fetchReviews = async (filterBest = false) => {
+    try {
+      setLoading(true);
+      let query = "";
+      if (filterBest) {
+        query = { isBest: true };
+      }
+      const res = await getReviews(query);
+      setReviews(res.data.reviews);
+    } catch (err) {
+      toast.error("Failed to fetch reviews");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch data based on active tab
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        if (activeTab === "videos") {
-          const res = await getVideoReels();
-          setVideos(res.data.videoReels);
-        } else if (activeTab === "reviews") {
-          const res = await getReviews();
-          setReviews(res.data.reviews);
-        }
-      } catch (err) {
-        toast.error("Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [activeTab]);
+    if (activeTab === "videos") {
+      fetchVideos(showOnlyBest);
+    } else if (activeTab === "reviews") {
+      fetchReviews(showOnlyBestReviews);
+    }
+  }, [activeTab, showOnlyBest, showOnlyBestReviews]);
 
   // Handle file uploads
   const handleFileUpload = async (e, type) => {
@@ -166,8 +191,11 @@ const Dashboard = () => {
 
   // Video handlers
   const handleVideoChange = (e) => {
-    const { name, value } = e.target;
-    setVideoForm({ ...videoForm, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setVideoForm({
+      ...videoForm,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
   const submitVideoForm = async (e) => {
@@ -209,10 +237,10 @@ const Dashboard = () => {
         thumbnailCloudId: "",
         category: "",
         tags: "",
+        isBest: false,
       });
       setEditingVideo(null);
-      const res = await getVideoReels();
-      setVideos(res.data.videoReels);
+      await fetchVideos(showOnlyBest);
     } catch (err) {
       toast.error(err.message || "Failed to save video");
     } finally {
@@ -231,6 +259,7 @@ const Dashboard = () => {
       thumbnailCloudId: video.thumbnailCloudId,
       category: video.category || "",
       tags: video.tags?.join(", ") || "",
+      isBest: video.isBest || false,
     });
     setShowVideoModal(true);
   };
@@ -248,8 +277,11 @@ const Dashboard = () => {
 
   // Review handlers
   const handleReviewChange = (e) => {
-    const { name, value } = e.target;
-    setReviewForm({ ...reviewForm, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setReviewForm({
+      ...reviewForm,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
   const submitReviewForm = async (e) => {
@@ -285,10 +317,10 @@ const Dashboard = () => {
         screenshot: "",
         screenshotId: "",
         userName: "",
+        isBest: false,
       });
       setEditingReview(null);
-      const res = await getReviews();
-      setReviews(res.data.reviews);
+      await fetchReviews(showOnlyBestReviews);
     } catch (err) {
       toast.error(err.message || "Failed to save review");
     } finally {
@@ -304,6 +336,7 @@ const Dashboard = () => {
       screenshot: review.screenshot,
       screenshotId: review.screenshotId,
       userName: review.userName || "",
+      isBest: review.isBest || false,
     });
     setShowReviewModal(true);
   };
@@ -394,45 +427,97 @@ const Dashboard = () => {
     switch (activeTab) {
       case "videos":
         return (
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              setEditingVideo(null);
-              setVideoForm({
-                title: "",
-                description: "",
-                videoUrl: "",
-                thumbnailUrl: "",
-                category: "",
-                tags: "",
-              });
-              setShowVideoModal(true);
-            }}
-            className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-          >
-            + Add New Video
-          </motion.button>
+          <div className="flex items-center space-x-4">
+            {/* Filter button for featured videos */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowOnlyBest(!showOnlyBest)}
+              className={`inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg shadow-sm ${
+                showOnlyBest
+                  ? "bg-red-100 text-red-700 border-red-300"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              {showOnlyBest ? "Show All Videos" : "Show Featured Only"}
+              {showOnlyBest && (
+                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  {videos.filter((video) => video.isBest).length}
+                </span>
+              )}
+            </motion.button>
+
+            {/* Add video button */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setEditingVideo(null);
+                setVideoForm({
+                  title: "",
+                  description: "",
+                  videoUrl: "",
+                  videoCloudId: "",
+                  thumbnailUrl: "",
+                  thumbnailCloudId: "",
+                  category: "",
+                  tags: "",
+                  isBest: false,
+                });
+                setShowVideoModal(true);
+              }}
+              className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+            >
+              + Add New Video
+            </motion.button>
+          </div>
         );
       case "reviews":
         return (
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => {
-              setEditingReview(null);
-              setReviewForm({
-                content: "",
-                rating: 5,
-                screenshot: "",
-                userName: "",
-              });
-              setShowReviewModal(true);
-            }}
-            className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
-          >
-            + Add New Review
-          </motion.button>
+          <div className="flex items-center space-x-4">
+            {/* Filter button for best reviews */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setShowOnlyBestReviews(!showOnlyBestReviews);
+                fetchReviews(!showOnlyBestReviews);
+              }}
+              className={`inline-flex items-center px-4 py-2 border text-sm font-medium rounded-lg shadow-sm ${
+                showOnlyBestReviews
+                  ? "bg-red-100 text-red-700 border-red-300"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              {showOnlyBestReviews ? "Show All Reviews" : "Show Best Only"}
+              {showOnlyBestReviews && (
+                <span className="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  {reviews.filter((review) => review.isBest).length}
+                </span>
+              )}
+            </motion.button>
+
+            {/* Add review button */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setEditingReview(null);
+                setReviewForm({
+                  content: "",
+                  rating: 5,
+                  screenshot: "",
+                  screenshotId: "",
+                  userName: "",
+                  isBest: false,
+                });
+                setShowReviewModal(true);
+              }}
+              className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700"
+            >
+              + Add New Review
+            </motion.button>
+          </div>
         );
       case "categories":
         return (
@@ -478,6 +563,7 @@ const Dashboard = () => {
             videos={videos}
             onEdit={editVideo}
             onDelete={deleteVideo}
+            showOnlyBest={showOnlyBest}
           />
         );
       case "reviews":
@@ -486,6 +572,7 @@ const Dashboard = () => {
             reviews={reviews}
             onEdit={editReview}
             onDelete={deleteReviewItem}
+            showOnlyBest={showOnlyBestReviews}
           />
         );
       case "categories":

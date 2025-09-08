@@ -1,5 +1,4 @@
-import React, { Suspense } from "react";
-import LoadingSpinner from "../components/sections/LoadingSpinner";
+import React from "react";
 
 const Hero = React.lazy(() => import("../components/sections/Hero"));
 const About = React.lazy(() => import("../components/sections/About"));
@@ -14,15 +13,13 @@ const Showreel = React.lazy(() => import("../components/sections/Showreel"));
 const Home = () => {
   return (
     <>
-      <Suspense fallback={<LoadingSpinner />}>
-        <Hero />
-        <About />
-        <Showreel />
-        <Services />
-        <Testimonials />
-        <Contact />
-        <EasterEgg />
-      </Suspense>
+      <Hero />
+      <About />
+      <Showreel />
+      <Services />
+      <Testimonials />
+      <Contact />
+      <EasterEgg />
     </>
   );
 };

@@ -123,7 +123,7 @@ const Showreel = () => {
   const fetchVideos = async () => {
     try {
       setLoading(true);
-      const response = await getVideoReels();
+      const response = await getVideoReels({ isBest: true });
 
       // Filter out excluded categories and limit to 6 projects
       const videos = response.data.videoReels

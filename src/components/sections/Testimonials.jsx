@@ -22,7 +22,7 @@ export default function Testimonials() {
     const fetchReviews = async () => {
       try {
         setLoading(true);
-        const response = await getReviews();
+        const response = await getReviews({ isBest: true });
         setTestimonials(response.data.reviews || []);
         setLoading(false);
       } catch (err) {

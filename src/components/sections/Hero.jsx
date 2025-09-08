@@ -34,7 +34,7 @@ export default function Hero() {
     const fetchVideos = async () => {
       try {
         setLoading(true);
-        const response = await getVideoReels();
+        const response = await getVideoReels({isBest:true});
 
         // Map the API response to the format needed for our component
         const videoData = response.data.videoReels.map((video) => ({
