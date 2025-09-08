@@ -3,7 +3,6 @@ import { Suspense, lazy } from "react";
 import RootLayout from "./layouts/RootLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
 import PrivateRoute from "./components/auth/PrivateRoute";
-
 import ErrorBoundary from "./components/sections/ErrorBoundry";
 import DelayedSpinner from "./hooks/DelayedSpinner";
 
@@ -41,12 +40,10 @@ const router = createBrowserRouter([
   {
     path: "dashboard",
     element: (
-      <Suspense fallback={<DelayedSpinner />}>
-        <PrivateRoute>
-          <DashboardLayout />
-        </PrivateRoute>
-      </Suspense>
-    ),
+      <PrivateRoute>
+        <DashboardLayout />
+      </PrivateRoute>
+    ), // REMOVE Suspense from here
     errorElement: <ErrorBoundary />,
     children: [
       {
