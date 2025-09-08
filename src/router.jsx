@@ -1,9 +1,10 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import RootLayout from "./layouts/RootLayout";
+import DashboardLayout from "./layouts/DashboardLayout";
 import PrivateRoute from "./components/auth/PrivateRoute";
+import LoadingSpinner from "./components/sections/LoadingSpinner";
 import ErrorBoundary from "./components/sections/ErrorBoundry";
-import DelayedSpinner from "./hooks/DelayedSpinner";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./page/Home"));
@@ -21,7 +22,7 @@ const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <Suspense fallback={<DelayedSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <Home />
           </Suspense>
         ),
@@ -29,39 +30,44 @@ const router = createBrowserRouter([
       {
         path: "projects",
         element: (
-          <Suspense fallback={<DelayedSpinner />}>
+          <Suspense fallback={<LoadingSpinner />}>
             <AllProject />
           </Suspense>
         ),
       },
     ],
   },
-
-  {
-    path: "profile",
-    element: (
-      <Suspense fallback={<DelayedSpinner />}>
-        <PrivateRoute>
-          <ProfilePage />
-        </PrivateRoute>
-      </Suspense>
-    ),
-  },
   {
     path: "dashboard",
     element: (
-      <Suspense fallback={<DelayedSpinner />}>
-        <PrivateRoute>
-          <Dashboard />
-        </PrivateRoute>
-      </Suspense>
+      <PrivateRoute>
+        <DashboardLayout />
+      </PrivateRoute>
     ),
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <Dashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ProfilePage />
+          </Suspense>
+        ),
+      },
+    ],
   },
-
   {
     path: "*",
     element: (
-      <Suspense fallback={<DelayedSpinner />}>
+      <Suspense fallback={<LoadingSpinner />}>
         <NotFoundPage />
       </Suspense>
     ),
