@@ -3,8 +3,9 @@ import { Suspense, lazy } from "react";
 import RootLayout from "./layouts/RootLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
 import PrivateRoute from "./components/auth/PrivateRoute";
-import LoadingSpinner from "./components/sections/LoadingSpinner";
+
 import ErrorBoundary from "./components/sections/ErrorBoundry";
+import DelayedSpinner from "./hooks/DelayedSpinner";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./page/Home"));
@@ -22,7 +23,7 @@ const router = createBrowserRouter([
       {
         index: true,
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<DelayedSpinner />}>
             <Home />
           </Suspense>
         ),
@@ -30,7 +31,7 @@ const router = createBrowserRouter([
       {
         path: "projects",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<DelayedSpinner />}>
             <AllProject />
           </Suspense>
         ),
@@ -40,16 +41,18 @@ const router = createBrowserRouter([
   {
     path: "dashboard",
     element: (
-      <PrivateRoute>
-        <DashboardLayout />
-      </PrivateRoute>
+      <Suspense fallback={<DelayedSpinner />}>
+        <PrivateRoute>
+          <DashboardLayout />
+        </PrivateRoute>
+      </Suspense>
     ),
     errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<DelayedSpinner />}>
             <Dashboard />
           </Suspense>
         ),
@@ -57,7 +60,7 @@ const router = createBrowserRouter([
       {
         path: "profile",
         element: (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<DelayedSpinner />}>
             <ProfilePage />
           </Suspense>
         ),
@@ -67,7 +70,7 @@ const router = createBrowserRouter([
   {
     path: "*",
     element: (
-      <Suspense fallback={<LoadingSpinner />}>
+      <Suspense fallback={<DelayedSpinner />}>
         <NotFoundPage />
       </Suspense>
     ),

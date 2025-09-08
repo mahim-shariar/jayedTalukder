@@ -16,18 +16,21 @@ const PrivateRoute = ({ children }) => {
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    // Simulate async auth check (replace with actual async check if needed)
-    const timer = setTimeout(() => setAuthChecked(true), 300);
-    return () => clearTimeout(timer);
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          // You might want to add an endpoint to get current user
+          // const userData = await getCurrentUser();
+          // setUser(userData);
+          setAuthChecked(true);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    checkAuth();
   }, []);
-
-  if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0a0a] via-[#0f0f0f] to-[#1a1a1a]">
-        <LoadingSpinner />
-      </div>
-    );
-  }
 
   if (!isAuthenticated()) {
     return <Navigate to="/*" replace />;
