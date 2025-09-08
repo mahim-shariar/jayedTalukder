@@ -5,11 +5,10 @@ import {
   useScroll,
   useMotionValueEvent,
 } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const navbarRef = useRef(null);
@@ -18,6 +17,7 @@ export default function Navbar() {
   const { scrollY } = useScroll();
   const reelBtnControls = useAnimation();
   const navigate = useNavigate();
+  const location = useLocation(); // Added to track current location
 
   // Check login status on mount
   useEffect(() => {
@@ -82,28 +82,30 @@ export default function Navbar() {
     }
   });
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    // Flashlight effect remains the same
-  };
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
     setShowProfileDropdown(false);
+    navigate("/"); // Redirect to home after logout
   };
 
   const handleNavigation = (path) => {
     navigate(path);
     setIsMenuOpen(false);
+    setShowProfileDropdown(false); // Close dropdown when navigating
+  };
+
+  // Check if a link is active
+  const isActiveLink = (path) => {
+    return location.pathname === path;
   };
 
   const navLinks = [
     { name: "Home", path: "/" },
-    { name: "About", path: "#about" },
+    { name: "About", path: "/about" }, // Changed from #about to /about
     { name: "Showreel", path: "/projects" },
-    { name: "Testimonials", path: "#testimonials" },
-    { name: "Contact", path: "#contact" },
+    { name: "Testimonials", path: "/testimonials" }, // Changed from #testimonials
+    { name: "Contact", path: "/contact" }, // Changed from #contact
   ];
 
   return (
@@ -114,7 +116,7 @@ export default function Navbar() {
       className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/20 border-b border-white/10"
     >
       {/* Film grain overlay */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjAzIiBudW1PY3RhdmVzPSIyIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4xIi8+Cjwvc3ZnPg==')] opacity-10 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjAzIiBudW1PY3RhdmVzPSIyIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMSIvPgo8L3N2Zz4=')] opacity-10 pointer-events-none"></div>
 
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-20">
@@ -137,20 +139,21 @@ export default function Navbar() {
           <nav className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
               <div key={link.name} className="relative">
-                {link.path.startsWith("#") ? (
-                  <a
-                    href={link.path}
-                    className="text-white/80 hover:text-red-400 font-medium text-sm uppercase tracking-wider transition-colors duration-300 relative"
-                  >
-                    {link.name}
-                  </a>
-                ) : (
-                  <Link
-                    to={link.path}
-                    className="text-white/80 hover:text-red-400 font-medium text-sm uppercase tracking-wider transition-colors duration-300 relative"
-                  >
-                    {link.name}
-                  </Link>
+                <Link
+                  to={link.path}
+                  className={`${
+                    isActiveLink(link.path) ? "text-red-400" : "text-white/80"
+                  } hover:text-red-400 font-medium text-sm uppercase tracking-wider transition-colors duration-300 relative`}
+                >
+                  {link.name}
+                </Link>
+                {isActiveLink(link.path) && (
+                  <motion.div
+                    className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#f43f5e] to-[#f43f5e80]"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                  />
                 )}
                 <motion.div
                   className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-[#f43f5e] to-[#f43f5e80]"
@@ -230,6 +233,16 @@ export default function Navbar() {
               </div>
             )}
 
+            {/* Login button for non-logged in users */}
+            {!isLoggedIn && (
+              <button
+                onClick={() => handleNavigation("/login")}
+                className="hidden md:block px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-800 text-white text-sm font-bold uppercase tracking-wider rounded-sm hover:from-gray-800 hover:to-gray-900 transition-all duration-300"
+              >
+                Login
+              </button>
+            )}
+
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -280,26 +293,18 @@ export default function Navbar() {
           <nav className="flex flex-col space-y-4">
             {navLinks.map((link) => (
               <div key={link.name}>
-                {link.path.startsWith("#") ? (
-                  <a
-                    href={link.path}
-                    className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.name}
-                  </a>
-                ) : (
-                  <Link
-                    to={link.path}
-                    className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {link.name}
-                  </Link>
-                )}
+                <Link
+                  to={link.path}
+                  className={`${
+                    isActiveLink(link.path) ? "text-red-400" : "text-white/80"
+                  } hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.name}
+                </Link>
               </div>
             ))}
-            {isLoggedIn && (
+            {isLoggedIn ? (
               <>
                 <Link
                   to="/dashboard"
@@ -325,6 +330,16 @@ export default function Navbar() {
                   Logout
                 </button>
               </>
+            ) : (
+              <button
+                onClick={() => {
+                  handleNavigation("/login");
+                  setIsMenuOpen(false);
+                }}
+                className="text-white/80 hover:text-red-400 py-2 font-medium uppercase tracking-wider transition-colors duration-300 border-b border-white/5 text-left"
+              >
+                Login
+              </button>
             )}
             <button
               onClick={() => handleNavigation("/projects")}
