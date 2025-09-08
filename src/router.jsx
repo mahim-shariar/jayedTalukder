@@ -1,7 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import RootLayout from "./layouts/RootLayout";
-import DashboardLayout from "./layouts/DashboardLayout";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import ErrorBoundary from "./components/sections/ErrorBoundry";
 import DelayedSpinner from "./hooks/DelayedSpinner";
@@ -37,35 +36,28 @@ const router = createBrowserRouter([
       },
     ],
   },
+
+  {
+    path: "profile",
+    element: (
+      <Suspense fallback={<DelayedSpinner />}>
+        <PrivateRoute>
+          <ProfilePage />
+        </PrivateRoute>
+      </Suspense>
+    ),
+  },
   {
     path: "dashboard",
     element: (
-      <PrivateRoute>
-        <Suspense fallback={<DelayedSpinner />}>
-          <DashboardLayout />
-        </Suspense>
-      </PrivateRoute>
+      <Suspense fallback={<DelayedSpinner />}>
+        <PrivateRoute>
+          <Dashboard />
+        </PrivateRoute>
+      </Suspense>
     ),
-    errorElement: <ErrorBoundary />,
-    children: [
-      {
-        index: true,
-        element: (
-          <Suspense fallback={<DelayedSpinner />}>
-            <Dashboard />
-          </Suspense>
-        ),
-      },
-      {
-        path: "profile",
-        element: (
-          <Suspense fallback={<DelayedSpinner />}>
-            <ProfilePage />
-          </Suspense>
-        ),
-      },
-    ],
   },
+
   {
     path: "*",
     element: (

@@ -213,7 +213,7 @@ export default function Navbar() {
                       Dashboard
                     </Link>
                     <Link
-                      to="/dashboard/profile"
+                      to="/profile"
                       className="block px-4 py-3 text-sm text-white/80 hover:bg-white/5 hover:text-white transition-colors duration-200 border-t border-white/5"
                       onClick={() => setShowProfileDropdown(false)}
                     >
