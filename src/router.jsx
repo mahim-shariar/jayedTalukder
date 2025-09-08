@@ -40,27 +40,19 @@ const router = createBrowserRouter([
   {
     path: "dashboard",
     element: (
-      <PrivateRoute>
+      <Suspense fallback={<DelayedSpinner />}>
         <DashboardLayout />
-      </PrivateRoute>
-    ), // REMOVE Suspense from here
+      </Suspense>
+    ),
     errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
-        element: (
-          <Suspense fallback={<DelayedSpinner />}>
-            <Dashboard />
-          </Suspense>
-        ),
+        element: <Dashboard />,
       },
       {
         path: "profile",
-        element: (
-          <Suspense fallback={<DelayedSpinner />}>
-            <ProfilePage />
-          </Suspense>
-        ),
+        element: <ProfilePage />,
       },
     ],
   },
