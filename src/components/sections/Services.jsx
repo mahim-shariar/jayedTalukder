@@ -1,9 +1,5 @@
-import { useRef, useEffect } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-
-gsap.registerPlugin(ScrollTrigger);
 
 const productionStages = [
   {
@@ -18,7 +14,8 @@ const productionStages = [
       "Equipment selection",
     ],
     cta: "View Planning Samples",
-    videoPreview: "/videos/preprod-preview.mp4",
+    videoPreview:
+      "https://assets.mixkit.co/videos/preview/mixkit-tree-with-yellow-flowers-1173-large.mp4",
   },
   {
     id: 2,
@@ -32,7 +29,8 @@ const productionStages = [
       "Lighting design",
     ],
     cta: "See On-Set Work",
-    videoPreview: "/videos/prod-preview.mp4",
+    videoPreview:
+      "https://assets.mixkit.co/videos/preview/mixkit-woman-sitting-at-her-desk-and-typing-on-her-51749-large.mp4",
   },
   {
     id: 3,
@@ -46,7 +44,8 @@ const productionStages = [
       "Motion graphics",
     ],
     cta: "View Post Samples",
-    videoPreview: "/videos/postprod-preview.mp4",
+    videoPreview:
+      "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-woman-typing-on-a-laptop-40837-large.mp4",
   },
   {
     id: 4,
@@ -60,7 +59,8 @@ const productionStages = [
       "Quality control",
     ],
     cta: "Delivery Specs",
-    videoPreview: "/videos/delivery-preview.mp4",
+    videoPreview:
+      "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-programmer-working-on-a-desk-40985-large.mp4",
   },
 ];
 
@@ -88,87 +88,47 @@ const itemVariants = {
   },
 };
 
-const cardVariants = (direction) => ({
-  hidden: {
-    x: direction === "left" ? -50 : 50,
-    opacity: 0,
-  },
+const cardVariants = {
+  hidden: { opacity: 0, y: 50 },
   visible: {
-    x: 0,
     opacity: 1,
+    y: 0,
     transition: {
       duration: 0.8,
-      ease: "backOut",
+      ease: [0.25, 0.46, 0.45, 0.94],
     },
   },
-});
+};
+
+const timelineVariants = {
+  hidden: { scaleY: 0 },
+  visible: {
+    scaleY: 1,
+    transition: {
+      duration: 1.5,
+      ease: [0.43, 0.13, 0.23, 0.96],
+    },
+  },
+};
+
+const dotVariants = {
+  hidden: { scale: 0 },
+  visible: {
+    scale: 1,
+    transition: {
+      type: "spring",
+      damping: 12,
+      stiffness: 200,
+    },
+  },
+};
 
 export default function ProductionProcess() {
-  const cardsRef = useRef([]);
   const sectionRef = useRef(null);
-  const containerRef = useRef(null);
   const videoRefs = useRef([]);
 
-  // Use Framer Motion's useInView hook to detect when section is in view
-  const isInView = useInView(sectionRef, { once: false, amount: 0.3 });
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Keep your existing GSAP animations
-      // Section title animation
-      gsap.fromTo(
-        ".process-title",
-        { y: 30, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 75%",
-          },
-        }
-      );
-
-      // Timeline animation
-      gsap.fromTo(
-        ".timeline-line",
-        { scaleY: 0 },
-        {
-          scaleY: 1,
-          duration: 2,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 60%",
-          },
-        }
-      );
-
-      // Card animations - keeping GSAP for these as well
-      cardsRef.current.forEach((card, i) => {
-        gsap.fromTo(
-          card,
-          { x: i % 2 === 0 ? -50 : 50, opacity: 0 },
-          {
-            x: 0,
-            opacity: 1,
-            duration: 0.8,
-            delay: i * 0.15,
-            ease: "back.out(1.2)",
-            scrollTrigger: {
-              trigger: card,
-              start: "top 80%",
-              toggleActions: "play none none none",
-            },
-          }
-        );
-      });
-    }, containerRef);
-
-    return () => ctx.revert();
-  }, []);
+  // Use Framer Motion's useInView hook with once: true
+  const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
 
   const handleMouseEnter = (index) => {
     if (videoRefs.current[index]) {
@@ -191,14 +151,13 @@ export default function ProductionProcess() {
       id="process"
       className="min-h-screen py-24 bg-[#0a0a0a] text-white relative overflow-hidden"
     >
-      {/* Background elements remain the same */}
+      {/* Background elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a] z-0"></div>
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdHVlcz0iMCIvPgogIDwvZmlsdGVyPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNub2lzZSkiIG9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] opacity-15 pointer-events-none z-10"></div>
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-15 pointer-events-none z-10"></div>
 
       {/* Content container with Framer Motion animation */}
       <motion.div
-        ref={containerRef}
         className="container mx-auto px-4 relative z-20"
         variants={containerVariants}
         initial="hidden"
@@ -206,7 +165,7 @@ export default function ProductionProcess() {
       >
         {/* Header with Framer Motion */}
         <motion.div className="text-center mb-20" variants={itemVariants}>
-          <h2 className="process-title text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-4">
+          <h2 className="text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-4">
             EDITOR'S WORKFLOW
           </h2>
           <div className="font-mono text-red-400/80 text-lg">
@@ -220,39 +179,49 @@ export default function ProductionProcess() {
         {/* Interactive timeline */}
         <div className="relative">
           {/* Vertical timeline line */}
-          <div className="timeline-line absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-gradient-to-b from-red-500/20 via-red-500/50 to-transparent origin-top"></div>
+          <motion.div
+            className="absolute left-1/2 transform -translate-x-1/2 w-0.5 h-full bg-gradient-to-b from-red-500/20 via-red-500/50 to-transparent origin-top"
+            variants={timelineVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+          ></motion.div>
 
           {/* Process cards with Framer Motion */}
           <div className="space-y-32 py-16">
             {productionStages.map((stage, index) => (
               <motion.div
                 key={stage.id}
-                ref={(el) => (cardsRef.current[index] = el)}
                 className={`relative flex ${
                   index % 2 === 0 ? "flex-row" : "flex-row-reverse"
                 } items-center gap-12`}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={() => handleMouseLeave(index)}
                 whileHover={{ scale: 1.02 }}
-                variants={cardVariants(index % 2 === 0 ? "left" : "right")}
+                variants={cardVariants}
                 initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.5 }}
+                animate={isInView ? "visible" : "hidden"}
+                transition={{ delay: index * 0.2 }}
               >
                 {/* Timeline dot */}
                 <motion.div
                   className="absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full bg-red-500 border-4 border-[#0a0a0a] z-10"
-                  initial={{ scale: 0 }}
-                  whileInView={{ scale: 1 }}
-                  transition={{ delay: index * 0.2, type: "spring" }}
-                  viewport={{ once: true }}
+                  variants={dotVariants}
+                  initial="hidden"
+                  animate={isInView ? "visible" : "hidden"}
+                  transition={{ delay: index * 0.2 }}
                 />
 
                 {/* Video preview */}
                 <motion.div
                   className="flex-1 relative overflow-hidden rounded-xl border border-white/10 group"
                   whileHover={{ scale: 1.03 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    delay: index * 0.2 + 0.2,
+                  }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70 z-10"></div>
                   <video
@@ -274,9 +243,8 @@ export default function ProductionProcess() {
                 <motion.div
                   className="flex-1"
                   initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: index * 0.2 + 0.3 }}
-                  viewport={{ once: true }}
                 >
                   <div className="flex items-center mb-4">
                     <span className="text-3xl mr-3">{stage.icon}</span>
@@ -292,9 +260,8 @@ export default function ProductionProcess() {
                         key={i}
                         className="flex items-start"
                         initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
+                        animate={isInView ? { opacity: 1, x: 0 } : {}}
                         transition={{ delay: index * 0.2 + 0.4 + i * 0.1 }}
-                        viewport={{ once: true }}
                       >
                         <svg
                           className="w-4 h-4 mt-0.5 mr-2 text-red-400 flex-shrink-0"
@@ -319,9 +286,8 @@ export default function ProductionProcess() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
+                    animate={isInView ? { opacity: 1 } : {}}
                     transition={{ delay: index * 0.2 + 0.8 }}
-                    viewport={{ once: true }}
                   >
                     {stage.cta}
                     <svg
@@ -348,9 +314,8 @@ export default function ProductionProcess() {
         <motion.div
           className="mt-32 text-center"
           initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.5 }}
-          viewport={{ once: true }}
         >
           <a href="#contact">
             <motion.button
