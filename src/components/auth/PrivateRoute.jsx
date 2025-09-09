@@ -3,12 +3,12 @@ import LoadingSpinner from "../sections/LoadingSpinner";
 import { useEffect, useState } from "react";
 
 // Moved outside component to avoid recreation on each render
-const isAuthenticated = () => {
+const checkAuthentication = () => {
   try {
     const token = localStorage.getItem("token");
     // More robust check for valid token
     return (
-      !!token && token !== "undefined" && token !== "null" && token.length > 0
+      !!token && token !== "undefined" && token !== "null" && token.length > 10 // Most tokens are longer than 10 characters
     );
   } catch (error) {
     console.error("Authentication check failed:", error);
@@ -17,47 +17,42 @@ const isAuthenticated = () => {
 };
 
 const PrivateRoute = ({ children }) => {
-  const [authChecked, setAuthChecked] = useState(false);
-  const [isAuth, setIsAuth] = useState(false);
+  const [authStatus, setAuthStatus] = useState({
+    checked: false,
+    isAuthenticated: false,
+  });
 
   useEffect(() => {
-    let isMounted = true; // Flag to prevent state updates on unmounted component
+    let isActive = true;
 
-    const checkAuth = async () => {
-      try {
-        // Simulate async authentication check (e.g., token validation API call)
-        await new Promise((resolve) => setTimeout(resolve, 100)); // Small delay
+    // Immediate check without artificial delay
+    const authenticated = checkAuthentication();
 
-        if (isMounted) {
-          const authenticated = isAuthenticated();
-          setIsAuth(authenticated);
-          setAuthChecked(true);
-        }
-      } catch (err) {
-        console.error("Auth check error:", err);
-        if (isMounted) {
-          setIsAuth(false);
-          setAuthChecked(true);
-        }
+    // Use requestAnimationFrame to avoid blocking UI thread
+    const id = requestAnimationFrame(() => {
+      if (isActive) {
+        setAuthStatus({
+          checked: true,
+          isAuthenticated: authenticated,
+        });
       }
-    };
-
-    checkAuth();
+    });
 
     // Cleanup function
     return () => {
-      isMounted = false;
+      isActive = false;
+      cancelAnimationFrame(id);
     };
   }, []);
 
   // Show loading spinner while checking authentication
-  if (!authChecked) {
+  if (!authStatus.checked) {
     return <LoadingSpinner />;
   }
 
-  // Redirect if not authenticated
-  if (!isAuth) {
-    return <Navigate to="/*" replace />;
+  // Redirect if not authenticated - use a valid path
+  if (!authStatus.isAuthenticated) {
+    return <Navigate to="/" replace />;
   }
 
   // Render children if authenticated

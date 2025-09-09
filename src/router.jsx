@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import LoadingSpinner from "./components/sections/LoadingSpinner";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./page/Home"));
@@ -26,91 +27,58 @@ export const routerConfig = [
         <RootLayout />
       </Suspense>
     ),
-    errorElement: <div>Error occurred!</div>,
+    errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <Home />
-          </Suspense>
-        ),
+        element: <Home />,
       },
       {
         path: "projects",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <AllProject />
-          </Suspense>
-        ),
+        element: <AllProject />,
       },
       {
         path: "about",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <About />
-          </Suspense>
-        ),
+        element: <About />,
       },
       {
         path: "testimonials",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <Testimonials />
-          </Suspense>
-        ),
+        element: <Testimonials />,
       },
       {
         path: "contact",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <Contact />
-          </Suspense>
-        ),
+        element: <Contact />,
       },
     ],
   },
   {
     path: "dashboard",
     element: (
-      <Suspense fallback={<LoadingSpinner />}>
-        <PrivateRoute>
+      <PrivateRoute>
+        <Suspense fallback={<LoadingSpinner />}>
           <DashboardLayout />
-        </PrivateRoute>
-      </Suspense>
+        </Suspense>
+      </PrivateRoute>
     ),
-    errorElement: <div>Error occurred!</div>,
+    errorElement: <ErrorBoundary />,
     children: [
       {
         index: true,
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <Dashboard />
-          </Suspense>
-        ),
+        element: <Dashboard />,
       },
       {
         path: "profile",
-        element: (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ProfilePage />
-          </Suspense>
-        ),
+        element: <ProfilePage />,
       },
     ],
   },
   {
     path: "*",
-    element: (
-      <Suspense fallback={<LoadingSpinner />}>
-        <NotFoundPage />
-      </Suspense>
-    ),
+    element: <NotFoundPage />,
   },
 ];
 
 // Create the router
 const router = createBrowserRouter(routerConfig);
 
-// Export as named export
-export { router };
+export default router;
