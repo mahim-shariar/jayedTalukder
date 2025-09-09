@@ -19,9 +19,11 @@ const Showreel = () => {
   const [projects, setProjects] = useState([]);
   const [activeLayout, setActiveLayout] = useState("fluid");
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isInView, setIsInView] = useState(false);
   const videoRefs = useRef({});
   const hoverVideoRefs = useRef({});
   const containerRef = useRef(null);
+  const sectionRef = useRef(null);
   const navigate = useNavigate();
 
   // Categories to exclude
@@ -48,34 +50,58 @@ const Showreel = () => {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  // Animation variants
+  // Intersection Observer for smoother entrance animations
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
+  // Animation variants with smoother settings
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
         staggerChildren: 0.15,
-        ease: [0.16, 1, 0.3, 1],
+        ease: [0.25, 0.46, 0.45, 0.94],
+        duration: 0.9,
       },
     },
   };
 
   const gridCardVariants = {
-    hidden: { y: 40, opacity: 0, scale: 0.98 },
+    hidden: { y: 40, opacity: 0, scale: 0.96 },
     visible: {
       y: 0,
       opacity: 1,
       scale: 1,
       transition: {
         duration: 0.8,
-        ease: [0.16, 1, 0.3, 1],
+        ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
     hover: {
       y: -8,
+      scale: 1.02,
       transition: {
-        duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
+        duration: 0.5,
+        ease: "easeOut",
       },
     },
   };
@@ -88,33 +114,33 @@ const Showreel = () => {
       transition: {
         delay: i * 0.1,
         duration: 0.8,
-        ease: [0.16, 1, 0.3, 1],
+        ease: [0.25, 0.46, 0.45, 0.94],
       },
     }),
     hover: {
       x: 20,
       transition: {
-        duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
+        duration: 0.5,
+        ease: "easeOut",
       },
     },
   };
 
   const fluidCardVariants = {
-    hidden: { opacity: 0, scale: 0 },
+    hidden: { opacity: 0, scale: 0.92 },
     visible: {
       opacity: 1,
       scale: 1,
       transition: {
         duration: 0.8,
-        ease: [0.16, 1, 0.3, 1],
+        ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
     hover: {
       scale: 1.05,
       transition: {
-        duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
+        duration: 0.5,
+        ease: "easeOut",
       },
     },
   };
@@ -216,7 +242,7 @@ const Showreel = () => {
   };
 
   // Calculate parallax effect based on mouse position
-  const calculateParallax = (index, intensity = 10) => {
+  const calculateParallax = (index, intensity = 6) => {
     const x = mousePosition.x * intensity * (index % 2 === 0 ? 1 : -1);
     const y = mousePosition.y * intensity * (index % 2 === 0 ? 1 : -1);
     return { x, y };
@@ -229,8 +255,7 @@ const Showreel = () => {
         <motion.div
           className="projects-stack flex flex-col gap-6 max-w-4xl mx-auto"
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          animate={isInView ? "visible" : "hidden"}
           variants={containerVariants}
         >
           {projects.map((project, i) => (
@@ -240,16 +265,16 @@ const Showreel = () => {
               variants={stackCardVariants}
               custom={i}
               initial="hidden"
-              whileInView="visible"
+              animate={isInView ? "visible" : "hidden"}
               whileHover="hover"
-              viewport={{ once: true, margin: "-50px" }}
               onHoverStart={() => handleVideoHover(project)}
               onHoverEnd={() => handleVideoHoverEnd(project)}
               onClick={() => playVideo(project)}
               style={{
                 transform: `perspective(1000px) rotateY(${
-                  calculateParallax(i, 2).x
-                }deg) rotateX(${calculateParallax(i, 2).y}deg)`,
+                  calculateParallax(i, 1.5).x
+                }deg) rotateX(${calculateParallax(i, 1.5).y}deg)`,
+                transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
               }}
             >
               <div className="flex h-48 bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl overflow-hidden border border-white/5 backdrop-blur-sm">
@@ -260,7 +285,7 @@ const Showreel = () => {
                     style={{
                       backgroundImage: `url(${project.thumbnail})`,
                       opacity: hoveredCard === project.id ? 0 : 1,
-                      transition: "opacity 0.3s ease",
+                      transition: "opacity 0.5s ease",
                     }}
                   />
 
@@ -274,14 +299,14 @@ const Showreel = () => {
                     preload="auto"
                     style={{
                       opacity: hoveredCard === project.id ? 1 : 0,
-                      transition: "opacity 0.3s ease",
+                      transition: "opacity 0.5s ease",
                     }}
                   >
                     <source src={project.video} type="video/mp4" />
                   </video>
 
                   {/* Play overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
                     <FiPlay className="text-3xl text-white" />
                   </div>
                 </div>
@@ -333,10 +358,9 @@ const Showreel = () => {
     } else if (activeLayout === "fluid") {
       return (
         <motion.div
-          className="projects-fluid grid grid-cols-2 md:grid-cols-3 gap-4"
+          className="projects-fluid grid grid-cols-2 md:grid-cols-3 gap-5"
           initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          animate={isInView ? "visible" : "hidden"}
           variants={containerVariants}
         >
           {projects.map((project, i) => (
@@ -345,16 +369,16 @@ const Showreel = () => {
               className="project-card group relative rounded-xl overflow-hidden cursor-pointer"
               variants={fluidCardVariants}
               initial="hidden"
-              whileInView="visible"
+              animate={isInView ? "visible" : "hidden"}
               whileHover="hover"
-              viewport={{ once: true, margin: "-50px" }}
               onHoverStart={() => handleVideoHover(project)}
               onHoverEnd={() => handleVideoHoverEnd(project)}
               onClick={() => playVideo(project)}
               style={{
                 transform: `perspective(1000px) translateX(${
-                  calculateParallax(i, 5).x
-                }px) translateY(${calculateParallax(i, 5).y}px)`,
+                  calculateParallax(i, 3).x
+                }px) translateY(${calculateParallax(i, 3).y}px)`,
+                transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
               }}
             >
               <div className="aspect-square rounded-xl overflow-hidden border border-white/5 bg-gradient-to-br from-gray-900 to-gray-800 backdrop-blur-sm">
@@ -365,7 +389,7 @@ const Showreel = () => {
                     style={{
                       backgroundImage: `url(${project.thumbnail})`,
                       opacity: hoveredCard === project.id ? 0 : 1,
-                      transition: "opacity 0.3s ease",
+                      transition: "opacity 0.5s ease",
                     }}
                   />
 
@@ -379,7 +403,7 @@ const Showreel = () => {
                     preload="auto"
                     style={{
                       opacity: hoveredCard === project.id ? 1 : 0,
-                      transition: "opacity 0.3s ease",
+                      transition: "opacity 0.5s ease",
                     }}
                   >
                     <source src={project.video} type="video/mp4" />
@@ -418,10 +442,9 @@ const Showreel = () => {
     // Default grid layout
     return (
       <motion.div
-        className="projects-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        className="projects-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: "-100px" }}
+        animate={isInView ? "visible" : "hidden"}
         variants={containerVariants}
       >
         {projects.map((project, i) => (
@@ -430,26 +453,26 @@ const Showreel = () => {
             className="project-card group relative rounded-xl overflow-hidden cursor-pointer"
             variants={gridCardVariants}
             initial="hidden"
-            whileInView="visible"
+            animate={isInView ? "visible" : "hidden"}
             whileHover="hover"
-            viewport={{ once: true, margin: "-50px" }}
             custom={i}
             onHoverStart={() => handleVideoHover(project)}
             onHoverEnd={() => handleVideoHoverEnd(project)}
             onClick={() => playVideo(project)}
             style={{
               transform: `perspective(1000px) rotateY(${
-                calculateParallax(i, 3).x
-              }deg) rotateX(${calculateParallax(i, 3).y}deg)`,
+                calculateParallax(i, 2).x
+              }deg) rotateX(${calculateParallax(i, 2).y}deg)`,
+              transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
             <motion.div
               className="relative h-full w-full rounded-xl overflow-hidden border border-white/5 bg-gray-900/30 backdrop-blur-sm"
               initial={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)" }}
               whileHover={{
-                boxShadow: "0 8px 32px rgba(239, 68, 68, 0.2)",
+                boxShadow: "0 20px 40px rgba(239, 68, 68, 0.25)",
                 backgroundColor: "rgba(30, 30, 30, 0.5)",
-                transition: { duration: 0.6 },
+                transition: { duration: 0.6, ease: "easeOut" },
               }}
             >
               <div className="thumbnail-container relative h-72 overflow-hidden">
@@ -459,7 +482,7 @@ const Showreel = () => {
                   style={{
                     backgroundImage: `url(${project.thumbnail})`,
                     opacity: hoveredCard === project.id ? 0 : 1,
-                    transition: "opacity 0.3s ease",
+                    transition: "opacity 0.5s ease",
                   }}
                 />
 
@@ -473,29 +496,29 @@ const Showreel = () => {
                   preload="auto"
                   style={{
                     opacity: hoveredCard === project.id ? 1 : 0,
-                    transition: "opacity 0.3s ease",
+                    transition: "opacity 0.5s ease",
                   }}
                 >
                   <source src={project.video} type="video/mp4" />
                 </video>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500" />
 
                 <motion.div
                   className="absolute top-4 right-4 bg-black/70 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-mono border border-white/5"
                   initial={{ y: -10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{
-                    delay: 0.2 + i * 0.05,
+                    delay: 0.2 + i * 0.06,
                     duration: 0.6,
-                    ease: [0.16, 1, 0.3, 1],
+                    ease: "easeOut",
                   }}
                   style={{ color: project.color }}
                 >
                   {project.year}
                 </motion.div>
 
-                <div className="absolute inset-0 m-auto bg-red-500 w-14 h-14 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-0 m-auto bg-red-500 w-14 h-14 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <FiPlay className="text-xl text-white ml-1" />
                 </div>
               </div>
@@ -504,7 +527,7 @@ const Showreel = () => {
                 className="project-info p-5 bg-gradient-to-b from-gray-900/70 to-gray-900/50"
                 initial={{ y: 0 }}
                 whileHover={{ y: -3 }}
-                transition={{ duration: 0.6 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
               >
                 <div className="flex justify-start items-start mb-2">
                   <h3 className="text-lg font-medium text-white">
@@ -529,9 +552,9 @@ const Showreel = () => {
                         initial={{ opacity: 0, x: 5 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{
-                          delay: 0.3 + index * 0.1,
+                          delay: 0.25 + index * 0.1,
                           duration: 0.5,
-                          ease: [0.16, 1, 0.3, 1],
+                          ease: "easeOut",
                         }}
                       >
                         {tag}
@@ -548,8 +571,8 @@ const Showreel = () => {
                   initial={{ width: 0 }}
                   animate={{ width: "100%" }}
                   transition={{
-                    duration: 0.8,
-                    ease: [0.16, 1, 0.3, 1],
+                    duration: 0.7,
+                    ease: "easeOut",
                   }}
                 />
               )}
@@ -562,7 +585,7 @@ const Showreel = () => {
 
   return (
     <section
-      ref={containerRef}
+      ref={sectionRef}
       className="showreel-section py-24 bg-gray-950 relative overflow-hidden"
       id="showreel"
     >
@@ -578,13 +601,14 @@ const Showreel = () => {
                 left: `${Math.random() * 100}%`,
               }}
               animate={{
-                y: [0, -20, 0],
-                opacity: [0.1, 0.3, 0.1],
+                y: [0, -15, 0],
+                opacity: [0.1, 0.25, 0.1],
               }}
               transition={{
-                duration: 3 + Math.random() * 5,
+                duration: 4 + Math.random() * 4,
                 repeat: Infinity,
                 delay: Math.random() * 2,
+                ease: "easeInOut",
               }}
             />
           ))}
@@ -594,7 +618,7 @@ const Showreel = () => {
           className="absolute inset-0 bg-gradient-to-br from-black via-[#0a0a0a] to-[#111111]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
         />
 
         {/* Animated grid lines */}
@@ -606,7 +630,7 @@ const Showreel = () => {
               style={{ top: `${i * 10}%` }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: i * 0.1, duration: 1 }}
+              transition={{ delay: i * 0.08, duration: 0.8, ease: "easeOut" }}
             />
           ))}
           {[...Array(10)].map((_, i) => (
@@ -616,7 +640,7 @@ const Showreel = () => {
               style={{ left: `${i * 10}%` }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: i * 0.1, duration: 1 }}
+              transition={{ delay: i * 0.08, duration: 0.8, ease: "easeOut" }}
             />
           ))}
         </div>
@@ -627,23 +651,22 @@ const Showreel = () => {
         <motion.div
           className="flex flex-col md:flex-row justify-between items-center mb-16"
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{
             duration: 0.8,
-            ease: [0.16, 1, 0.3, 1],
-            delay: 0.2,
+            ease: "easeOut",
+            delay: 0.15,
           }}
         >
           <div>
-            <h2 className="text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 mb-2">
+            <h2 className="text-5xl md:text-6xl font-bold text-red-500 bg-clip-text bg-gradient-to-r from-red-400 to-red-600 mb-2">
               <motion.span
                 initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
                 transition={{
                   duration: 0.8,
-                  ease: [0.16, 1, 0.3, 1],
-                  delay: 0.3,
+                  ease: "easeOut",
+                  delay: 0.25,
                 }}
               >
                 SHOW<span className="text-white">REEL</span>
@@ -657,8 +680,8 @@ const Showreel = () => {
           <motion.div
             className="flex items-center gap-2 mt-6 md:mt-0"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            animate={isInView ? { opacity: 1 } : {}}
+            transition={{ delay: 0.4, duration: 0.6 }}
           >
             <motion.button
               onClick={() => setActiveLayout("grid")}
@@ -669,6 +692,7 @@ const Showreel = () => {
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <FiGrid className="w-5 h-5" />
             </motion.button>
@@ -681,6 +705,7 @@ const Showreel = () => {
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <FiBox className="w-5 h-5" />
             </motion.button>
@@ -693,6 +718,7 @@ const Showreel = () => {
               }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
               <FiFilm className="w-5 h-5" />
             </motion.button>
@@ -706,8 +732,12 @@ const Showreel = () => {
               <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
               <motion.div
                 className="absolute inset-0 m-auto w-8 h-8 bg-red-500 rounded-full"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{
+                  duration: 1.2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               />
             </div>
           </div>
@@ -721,12 +751,11 @@ const Showreel = () => {
         <motion.div
           className="text-center mt-20"
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{
             duration: 0.8,
-            ease: [0.16, 1, 0.3, 1],
-            delay: 0.2,
+            ease: "easeOut",
+            delay: 0.15,
           }}
         >
           <motion.button
@@ -736,7 +765,7 @@ const Showreel = () => {
               scale: 1.03,
               borderColor: "rgba(239, 68, 68, 0.5)",
               backgroundColor: "rgba(239, 68, 68, 0.05)",
-              transition: { duration: 0.6 },
+              transition: { duration: 0.5 },
             }}
             whileTap={{ scale: 0.98 }}
           >
@@ -745,16 +774,16 @@ const Showreel = () => {
             </span>
             <motion.span
               className="relative z-10 ml-3"
-              whileHover={{ x: 4 }}
+              whileHover={{ x: 3 }}
               transition={{
                 type: "spring",
-                stiffness: 400,
-                damping: 10,
+                stiffness: 500,
+                damping: 15,
               }}
             >
               <FiChevronRight className="w-4 h-4" />
             </motion.span>
-            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </motion.button>
         </motion.div>
       </div>
@@ -768,20 +797,20 @@ const Showreel = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{
-              duration: 0.6,
-              ease: [0.16, 1, 0.3, 1],
+              duration: 0.5,
+              ease: "easeOut",
             }}
           >
             <motion.div
               className="relative w-full h-full max-w-5xl max-h-[90vh] flex items-center justify-center"
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              initial={{ scale: 0.97, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              exit={{ scale: 0.97, opacity: 0, y: 15 }}
               transition={{
                 type: "spring",
-                damping: 20,
+                damping: 25,
                 stiffness: 200,
-                mass: 0.5,
+                mass: 0.8,
               }}
             >
               {/* Video container with dynamic sizing */}
@@ -801,11 +830,11 @@ const Showreel = () => {
                 <motion.button
                   onClick={closeVideo}
                   className="absolute top-4 left-4 bg-red-500/90 w-9 h-9 rounded-full flex items-center justify-center z-30 hover:bg-red-600 transition-all"
-                  whileHover={{ rotate: 90, scale: 1.1 }}
+                  whileHover={{ rotate: 90, scale: 1.05 }}
                   transition={{
                     type: "spring",
                     stiffness: 400,
-                    damping: 10,
+                    damping: 15,
                   }}
                 >
                   <FiX className="w-4 h-4 text-white" />
@@ -813,12 +842,12 @@ const Showreel = () => {
 
                 <motion.div
                   className="absolute bottom-4 left-4 bg-black/70 px-3 py-1.5 rounded text-sm font-medium z-20 border-l-2 border-red-500"
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
-                    delay: 0.3,
-                    duration: 0.6,
-                    ease: [0.16, 1, 0.3, 1],
+                    delay: 0.25,
+                    duration: 0.4,
+                    ease: "easeOut",
                   }}
                 >
                   <div className="text-white">{currentVideo.title}</div>

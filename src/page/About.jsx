@@ -22,53 +22,87 @@ const About = () => {
       { text: "Jayed> _ Specializing in emotional narratives", delay: 1.8 },
     ];
 
-    const tl = gsap.timeline({ repeat: -1, repeatDelay: 1 });
+    // Create a smoother text animation timeline
+    const tl = gsap.timeline({
+      repeat: -1,
+      repeatDelay: 1,
+      defaults: {
+        ease: "power2.inOut",
+        duration: 1.8,
+      },
+    });
 
     sections.forEach((section) => {
       tl.to(textContainerRef.current, {
-        duration: 1.5,
         text: section.text,
-        ease: "none",
         delay: section.delay,
+        ease: "power1.inOut",
       });
     });
 
-    // Cursor blink effect
+    // Smoother cursor blink effect
     gsap.to("#terminal-cursor", {
       opacity: 0,
-      ease: "power1.inOut",
+      ease: "sine.inOut",
       repeat: -1,
       yoyo: true,
-      duration: 0.8,
+      duration: 0.6,
     });
 
-    // Grain effect
-    gsap.from(grainRef.current, {
-      opacity: 0,
-      duration: 2,
-      ease: "expo.out",
-    });
+    // Smoother grain effect with delayed reveal
+    gsap.fromTo(
+      grainRef.current,
+      {
+        opacity: 0,
+        scale: 1.1,
+      },
+      {
+        opacity: 0.15,
+        scale: 1,
+        duration: 2.5,
+        ease: "expo.out",
+        delay: 0.5,
+      }
+    );
 
-    // Animate content sections on scroll
+    // Animate content sections on scroll with smoother transitions
     contentRefs.current.forEach((ref, i) => {
       if (ref) {
         gsap.fromTo(
           ref,
-          { y: 50, opacity: 0 },
+          {
+            y: 30,
+            opacity: 0,
+            scale: 0.98,
+          },
           {
             y: 0,
             opacity: 1,
-            duration: 0.8,
-            delay: i * 0.2,
+            scale: 1,
+            duration: 1,
+            delay: i * 0.15,
+            ease: "power2.out",
             scrollTrigger: {
               trigger: ref,
-              start: "top 80%",
+              start: "top 85%",
               toggleActions: "play none none none",
+              markers: false, // Remove in production
             },
           }
         );
       }
     });
+
+    // Add a subtle fade-in for the entire section
+    gsap.fromTo(
+      aboutSectionRef.current,
+      { opacity: 0 },
+      {
+        opacity: 1,
+        duration: 1.2,
+        ease: "power2.out",
+      }
+    );
 
     return () => {
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
@@ -128,21 +162,22 @@ const About = () => {
           <div className="w-full lg:w-1/3 relative">
             {/* Skeleton loader */}
             {!imageLoaded && (
-              <div className="w-full h-96 bg-gray-800 rounded-lg animate-pulse">
+              <div className="w-full h-[28rem] bg-gray-800 rounded-lg animate-pulse">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 opacity-50 rounded-lg"></div>
               </div>
             )}
 
-            {/* Profile Image */}
+            {/* Profile Image Container */}
             <div
-              className={`relative rounded-lg overflow-hidden border-2 border-white/20 transition-opacity duration-500 ${
+              className={`relative rounded-lg overflow-hidden border-2 border-white/20 transition-opacity duration-700 ${
                 imageLoaded ? "opacity-100" : "opacity-0"
               }`}
+              style={{ height: "28rem" }}
             >
               <img
                 src={jayed_Profile}
                 alt="Jayed - Video Editor"
-                className="w-full h-96 object-cover"
+                className="w-full h-full object-cover"
                 onLoad={() => setImageLoaded(true)}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
@@ -309,115 +344,114 @@ const About = () => {
         </div>
 
         {/* Milestone Section */}
-        <div
-          ref={addToRefs}
-          className="bg-black/20 p-8 rounded-lg border border-white/10 mb-20"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
-            Career Milestones
-          </h2>
+        <div ref={addToRefs}>
+          <div className="bg-black/20 p-8 rounded-lg border border-white/10 mb-20">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center">
+              Career Milestones
+            </h2>
 
-          <div className="relative">
-            {/* Timeline line */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-red-500/20"></div>
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-red-500/20"></div>
 
-            <div className="space-y-12">
-              {/* Milestone 1 */}
-              <div className="flex flex-col md:flex-row items-center md:items-start relative">
-                <div className="md:w-1/2 md:pr-12 md:text-right mb-4 md:mb-0">
-                  <h3 className="text-xl font-semibold text-white">
-                    2024: The Beginning
-                  </h3>
-                  <p className="text-white/80">
-                    Started my journey in video editing while studying at
-                    university
-                  </p>
+              <div className="space-y-12">
+                {/* Milestone 1 */}
+                <div className="flex flex-col md:flex-row items-center md:items-start relative">
+                  <div className="md:w-1/2 md:pr-12 md:text-right mb-4 md:mb-0">
+                    <h3 className="text-xl font-semibold text-white">
+                      2024: The Beginning
+                    </h3>
+                    <p className="text-white/80">
+                      Started my journey in video editing while studying at
+                      university
+                    </p>
+                  </div>
+
+                  <div className="w-4 h-4 bg-red-500 rounded-full z-10 mx-4"></div>
+
+                  <div className="md:w-1/2 md:pl-12">
+                    {/* Spacer for alignment */}
+                  </div>
                 </div>
 
-                <div className="w-4 h-4 bg-red-500 rounded-full z-10 mx-4"></div>
+                {/* Milestone 2 */}
+                <div className="flex flex-col md:flex-row items-center md:items-start relative">
+                  <div className="md:w-1/2 md:pr-12 md:text-right">
+                    {/* Spacer for alignment */}
+                  </div>
 
-                <div className="md:w-1/2 md:pl-12">
-                  {/* Spacer for alignment */}
-                </div>
-              </div>
+                  <div className="w-4 h-4 bg-red-500 rounded-full z-10 mx-4"></div>
 
-              {/* Milestone 2 */}
-              <div className="flex flex-col md:flex-row items-center md:items-start relative">
-                <div className="md:w-1/2 md:pr-12 md:text-right">
-                  {/* Spacer for alignment */}
-                </div>
-
-                <div className="w-4 h-4 bg-red-500 rounded-full z-10 mx-4"></div>
-
-                <div className="md:w-1/2 md:pl-12 mb-4 md:mb-0">
-                  <h3 className="text-xl font-semibold text-white">
-                    Joined Digital Dropout Skool
-                  </h3>
-                  <p className="text-white/80">
-                    Enhanced my skills through specialized training and
-                    mentorship
-                  </p>
-                </div>
-              </div>
-
-              {/* Milestone 3 */}
-              <div className="flex flex-col md:flex-row items-center md:items-start relative">
-                <div className="md:w-1/2 md:pr-12 md:text-right mb-4 md:mb-0">
-                  <h3 className="text-xl font-semibold text-white">
-                    MacBook Achievement
-                  </h3>
-                  <p className="text-white/80">
-                    Awarded for exceptional performance in the program
-                  </p>
+                  <div className="md:w-1/2 md:pl-12 mb-4 md:mb-0">
+                    <h3 className="text-xl font-semibold text-white">
+                      Joined Digital Dropout Skool
+                    </h3>
+                    <p className="text-white/80">
+                      Enhanced my skills through specialized training and
+                      mentorship
+                    </p>
+                  </div>
                 </div>
 
-                <div className="w-4 h-4 bg-red-500 rounded-full z-10 mx-4"></div>
+                {/* Milestone 3 */}
+                <div className="flex flex-col md:flex-row items-center md:items-start relative">
+                  <div className="md:w-1/2 md:pr-12 md:text-right mb-4 md:mb-0">
+                    <h3 className="text-xl font-semibold text-white">
+                      MacBook Achievement
+                    </h3>
+                    <p className="text-white/80">
+                      Awarded for exceptional performance in the program
+                    </p>
+                  </div>
 
-                <div className="md:w-1/2 md:pl-12">
-                  {/* Spacer for alignment */}
+                  <div className="w-4 h-4 bg-red-500 rounded-full z-10 mx-4"></div>
+
+                  <div className="md:w-1/2 md:pl-12">
+                    {/* Spacer for alignment */}
+                  </div>
                 </div>
-              </div>
 
-              {/* Milestone 4 */}
-              <div className="flex flex-col md:flex-row items-center md:items-start relative">
-                <div className="md:w-1/2 md:pr-12 md:text-right">
-                  {/* Spacer for alignment */}
-                </div>
+                {/* Milestone 4 */}
+                <div className="flex flex-col md:flex-row items-center md:items-start relative">
+                  <div className="md:w-1/2 md:pr-12 md:text-right">
+                    {/* Spacer for alignment */}
+                  </div>
 
-                <div className="w-4 h-4 bg-red-500 rounded-full z-10 mx-4"></div>
+                  <div className="w-4 h-4 bg-red-500 rounded-full z-10 mx-4"></div>
 
-                <div className="md:w-1/2 md:pl-12">
-                  <h3 className="text-xl font-semibold text-white">
-                    Present: Professional Editor
-                  </h3>
-                  <p className="text-white/80">
-                    Creating compelling visual stories for clients worldwide
-                  </p>
+                  <div className="md:w-1/2 md:pl-12">
+                    <h3 className="text-xl font-semibold text-white">
+                      Present: Professional Editor
+                    </h3>
+                    <p className="text-white/80">
+                      Creating compelling visual stories for clients worldwide
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+              Why I Do What I Do
+            </h2>
+
+            <p className="text-xl text-white/80 mb-8">
+              "I believe that every moment has a story worth telling. My mission
+              is to find those stories and tell them in the most compelling way
+              possible through the art of video editing."
+            </p>
+
+            <Link
+              to="/contact"
+              className="px-8 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 font-medium"
+            >
+              Let's Work Together
+            </Link>
+          </div>
         </div>
 
         {/* Closing Statement */}
-        <div className="text-center max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Why I Do What I Do
-          </h2>
-
-          <p className="text-xl text-white/80 mb-8">
-            "I believe that every moment has a story worth telling. My mission
-            is to find those stories and tell them in the most compelling way
-            possible through the art of video editing."
-          </p>
-
-          <Link
-            to="/contact"
-            className="px-8 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-300 font-medium"
-          >
-            Let's Work Together
-          </Link>
-        </div>
       </div>
 
       {/* Subtle corner accents */}
