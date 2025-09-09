@@ -34,7 +34,7 @@ export default function Hero() {
     const fetchVideos = async () => {
       try {
         setLoading(true);
-        const response = await getVideoReels({isBest:true});
+        const response = await getVideoReels({ isBest: true });
 
         // Map the API response to the format needed for our component
         const videoData = response.data.videoReels.map((video) => ({
@@ -80,13 +80,15 @@ export default function Hero() {
     setMousePos({ x, y });
 
     // Using GSAP for smoother light movement
-    gsap.to(lightRef.current, {
-      x: `${x}%`,
-      y: `${y}%`,
-      duration: 1.2,
-      ease: "expo.out",
-      overwrite: "auto",
-    });
+    if (lightRef.current) {
+      gsap.to(lightRef.current, {
+        x: `${x}%`,
+        y: `${y}%`,
+        duration: 1.2,
+        ease: "expo.out",
+        overwrite: "auto",
+      });
+    }
   };
 
   // Create particles with different behaviors
@@ -122,13 +124,16 @@ export default function Hero() {
     }
 
     // Pulse effect to show state change
-    gsap.to(".playback-btn", {
-      scale: 1.2,
-      duration: 0.3,
-      yoyo: true,
-      repeat: 1,
-      ease: "power2.out",
-    });
+    const playbackBtns = document.querySelectorAll(".playback-btn");
+    if (playbackBtns.length) {
+      gsap.to(playbackBtns, {
+        scale: 1.2,
+        duration: 0.3,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.out",
+      });
+    }
   };
 
   // Initialize all animations with responsive adjustments
@@ -145,7 +150,10 @@ export default function Hero() {
 
     // Responsive text size adjustments
     const isMobile = windowSize.width < 768;
-    const textElements = textRef.current.children;
+    const textElements = textRef.current?.children;
+
+    if (!textElements) return;
+
     const textDuration = isMobile ? 1.2 : 1.5;
     const textStagger = isMobile ? 0.15 : 0.18;
 
@@ -156,30 +164,39 @@ export default function Hero() {
       rotationX: isMobile ? 10 : 15,
     });
 
-    gsap.set(filmStripRef.current, {
-      x: "-100%",
-      rotationY: isMobile ? 10 : 20,
-    });
+    if (filmStripRef.current) {
+      gsap.set(filmStripRef.current, {
+        x: "-100%",
+        rotationY: isMobile ? 10 : 20,
+      });
+    }
 
-    gsap.set(framesRef.current, {
-      opacity: 0,
-      scale: isMobile ? 0.7 : 0.8,
-      rotationY: isMobile ? -10 : -15,
-    });
+    if (framesRef.current.length) {
+      gsap.set(framesRef.current, {
+        opacity: 0,
+        scale: isMobile ? 0.7 : 0.8,
+        rotationY: isMobile ? -10 : -15,
+      });
+    }
 
     gsap.set(".particle", { opacity: 0 });
-    gsap.set(lightRef.current, { opacity: 0 });
+
+    if (lightRef.current) {
+      gsap.set(lightRef.current, { opacity: 0 });
+    }
 
     // Light reveal
-    animationRef.current.masterTl.to(
-      lightRef.current,
-      {
-        opacity: isMobile ? 0.15 : 0.25, // Less intense on mobile
-        duration: 2.5,
-        ease: "sine.out",
-      },
-      0
-    );
+    if (lightRef.current) {
+      animationRef.current.masterTl.to(
+        lightRef.current,
+        {
+          opacity: isMobile ? 0.15 : 0.25, // Less intense on mobile
+          duration: 2.5,
+          ease: "sine.out",
+        },
+        0
+      );
+    }
 
     // Text animation with responsive adjustments
     animationRef.current.masterTl.to(
@@ -196,118 +213,134 @@ export default function Hero() {
     );
 
     // Film strip animation with responsive duration
-    animationRef.current.masterTl.to(
-      filmStripRef.current,
-      {
-        x: "0%",
-        rotationY: 0,
-        duration: isMobile ? 1.8 : 2.2,
-        ease: "expo.out",
-      },
-      0
-    );
-
-    // Frame animations with responsive adjustments
-    animationRef.current.masterTl.to(
-      framesRef.current,
-      {
-        opacity: 1,
-        scale: 1,
-        rotationY: 0,
-        stagger: isMobile ? 0.08 : 0.12,
-        duration: isMobile ? 1 : 1.2,
-        ease: "elastic.out(1, 0.4)",
-      },
-      isMobile ? 0.6 : 0.8
-    );
-
-    // Continuous film movement with perfect loop (added to master timeline)
-    const filmLoop = gsap.timeline({ repeat: -1 });
-    filmLoop.to(filmStripRef.current, {
-      x: "-=100%",
-      duration: isMobile ? 40 : 60, // Faster on mobile
-      ease: "none",
-      modifiers: {
-        x: gsap.utils.unitize((x) => parseFloat(x) % 100),
-      },
-    });
-    animationRef.current.filmTl = filmLoop;
-    animationRef.current.masterTl.add(filmLoop, isMobile ? 1.8 : 2.2);
-
-    // Floating animations for frames with responsive adjustments
-    framesRef.current.forEach((frame, i) => {
-      const tl = gsap.timeline({ repeat: -1, yoyo: true });
-      const floatAmount = isMobile ? 10 : 15; // Less movement on mobile
-      const floatDuration = isMobile ? 4 + i * 0.5 : 6 + i * 0.5; // Faster on mobile
-
-      tl.to(
-        frame,
+    if (filmStripRef.current) {
+      animationRef.current.masterTl.to(
+        filmStripRef.current,
         {
-          y: Math.sin(i * 0.5) * floatAmount,
-          rotationY: isMobile ? 3 : 5,
-          duration: floatDuration,
-          ease: "sine.inOut",
+          x: "0%",
+          rotationY: 0,
+          duration: isMobile ? 1.8 : 2.2,
+          ease: "expo.out",
         },
         0
       );
-      animationRef.current.floatTls.push(tl);
-      animationRef.current.masterTl.add(tl, isMobile ? 1.5 : 2);
-    });
+    }
 
-    // Particle animations with responsive adjustments
-    particlesRef.current.forEach((particle, i) => {
-      const tl = gsap.timeline({ repeat: -1 });
+    // Frame animations with responsive adjustments
+    if (framesRef.current.length) {
+      animationRef.current.masterTl.to(
+        framesRef.current,
+        {
+          opacity: 1,
+          scale: 1,
+          rotationY: 0,
+          stagger: isMobile ? 0.08 : 0.12,
+          duration: isMobile ? 1 : 1.2,
+          ease: "elastic.out(1, 0.4)",
+        },
+        isMobile ? 0.6 : 0.8
+      );
+    }
 
-      if (particle.path === "circle") {
+    // Continuous film movement with perfect loop (added to master timeline)
+    if (filmStripRef.current) {
+      const filmLoop = gsap.timeline({ repeat: -1 });
+      filmLoop.to(filmStripRef.current, {
+        x: "-=100%",
+        duration: isMobile ? 40 : 60, // Faster on mobile
+        ease: "none",
+        modifiers: {
+          x: gsap.utils.unitize((x) => parseFloat(x) % 100),
+        },
+      });
+      animationRef.current.filmTl = filmLoop;
+      animationRef.current.masterTl.add(filmLoop, isMobile ? 1.8 : 2.2);
+    }
+
+    // Floating animations for frames with responsive adjustments
+    if (framesRef.current.length) {
+      framesRef.current.forEach((frame, i) => {
+        if (!frame) return;
+
+        const tl = gsap.timeline({ repeat: -1, yoyo: true });
+        const floatAmount = isMobile ? 10 : 15; // Less movement on mobile
+        const floatDuration = isMobile ? 4 + i * 0.5 : 6 + i * 0.5; // Faster on mobile
+
         tl.to(
-          `.particle-${i}`,
+          frame,
           {
-            motionPath: {
-              path: `M${particle.x},${particle.y} a${particle.pathRadius},${
-                particle.pathRadius
-              } 0 1,0 ${particle.pathRadius * 2},0 a${particle.pathRadius},${
-                particle.pathRadius
-              } 0 1,0 -${particle.pathRadius * 2},0`,
-              type: "cubic",
-              autoRotate: true,
-            },
-            duration: isMobile
-              ? 15 + Math.random() * 10
-              : 25 + Math.random() * 15,
-            ease: "none",
-          },
-          0
-        );
-      } else {
-        tl.to(
-          `.particle-${i}`,
-          {
-            x: `+=${Math.sin(i) * (isMobile ? 40 : 60)}`,
-            y: `+=${Math.cos(i) * (isMobile ? 40 : 60)}`,
-            duration: isMobile
-              ? 10 + Math.random() * 10
-              : 15 + Math.random() * 15,
+            y: Math.sin(i * 0.5) * floatAmount,
+            rotationY: isMobile ? 3 : 5,
+            duration: floatDuration,
             ease: "sine.inOut",
           },
           0
         );
-      }
+        animationRef.current.floatTls.push(tl);
+        animationRef.current.masterTl.add(tl, isMobile ? 1.5 : 2);
+      });
+    }
 
-      // Smoother fade in for particles
-      tl.fromTo(
-        `.particle-${i}`,
-        { opacity: 0 },
-        {
-          opacity: particle.alpha || 0.15,
-          duration: isMobile ? 2 : 3,
-          ease: "sine.inOut",
-        },
-        0
-      );
+    // Particle animations with responsive adjustments
+    // Wait for particles to be rendered before animating them
+    setTimeout(() => {
+      particlesRef.current.forEach((particle, i) => {
+        const particleElement = document.querySelector(`.particle-${i}`);
+        if (!particleElement) return;
 
-      animationRef.current.particleTls.push(tl);
-      animationRef.current.masterTl.add(tl, isMobile ? 1 : 1.5);
-    });
+        const tl = gsap.timeline({ repeat: -1 });
+
+        if (particle.path === "circle") {
+          tl.to(
+            particleElement,
+            {
+              motionPath: {
+                path: `M${particle.x},${particle.y} a${particle.pathRadius},${
+                  particle.pathRadius
+                } 0 1,0 ${particle.pathRadius * 2},0 a${particle.pathRadius},${
+                  particle.pathRadius
+                } 0 1,0 -${particle.pathRadius * 2},0`,
+                type: "cubic",
+                autoRotate: true,
+              },
+              duration: isMobile
+                ? 15 + Math.random() * 10
+                : 25 + Math.random() * 15,
+              ease: "none",
+            },
+            0
+          );
+        } else {
+          tl.to(
+            particleElement,
+            {
+              x: `+=${Math.sin(i) * (isMobile ? 40 : 60)}`,
+              y: `+=${Math.cos(i) * (isMobile ? 40 : 60)}`,
+              duration: isMobile
+                ? 10 + Math.random() * 10
+                : 15 + Math.random() * 15,
+              ease: "sine.inOut",
+            },
+            0
+          );
+        }
+
+        // Smoother fade in for particles
+        tl.fromTo(
+          particleElement,
+          { opacity: 0 },
+          {
+            opacity: 0.15,
+            duration: isMobile ? 2 : 3,
+            ease: "sine.inOut",
+          },
+          0
+        );
+
+        animationRef.current.particleTls.push(tl);
+        animationRef.current.masterTl.add(tl, isMobile ? 1 : 1.5);
+      });
+    }, 100); // Small delay to ensure particles are rendered
 
     // Cleanup function
     return () => {
@@ -320,6 +353,7 @@ export default function Hero() {
 
   const handleFrameHover = (index, isHovering) => {
     if (windowSize.width < 768) return; // Disable hover effects on mobile
+    if (!framesRef.current[index]) return;
 
     const videoIndex = index % videos.length;
     const videoElement = videoRefs.current[index];

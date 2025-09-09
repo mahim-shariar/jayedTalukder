@@ -1,13 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Suspense, lazy } from "react";
-import RootLayout from "./layouts/RootLayout";
-import DashboardLayout from "./layouts/DashboardLayout";
-import PrivateRoute from "./components/auth/PrivateRoute";
 import LoadingSpinner from "./components/sections/LoadingSpinner";
-import ErrorBoundary from "./components/sections/ErrorBoundry";
-import About from "./page/About";
-import Testimonials from "./page/Testimonials";
-import Contact from "./page/Contact";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./page/Home"));
@@ -15,12 +8,25 @@ const Dashboard = lazy(() => import("./page/Dashboard"));
 const ProfilePage = lazy(() => import("./page/ProfilePage"));
 const NotFoundPage = lazy(() => import("./page/NotFoundPage"));
 const AllProject = lazy(() => import("./page/AllProject"));
+const About = lazy(() => import("./page/About"));
+const Testimonials = lazy(() => import("./page/Testimonials"));
+const Contact = lazy(() => import("./page/Contact"));
 
-const router = createBrowserRouter([
+// Layout components
+const RootLayout = lazy(() => import("./layouts/RootLayout"));
+const DashboardLayout = lazy(() => import("./layouts/DashboardLayout"));
+const PrivateRoute = lazy(() => import("./components/auth/PrivateRoute"));
+
+// Create router configuration
+export const routerConfig = [
   {
     path: "/",
-    element: <RootLayout />,
-    errorElement: <ErrorBoundary />,
+    element: (
+      <Suspense fallback={<LoadingSpinner />}>
+        <RootLayout />
+      </Suspense>
+    ),
+    errorElement: <div>Error occurred!</div>,
     children: [
       {
         index: true,
@@ -67,11 +73,13 @@ const router = createBrowserRouter([
   {
     path: "dashboard",
     element: (
-      <PrivateRoute>
-        <DashboardLayout />
-      </PrivateRoute>
+      <Suspense fallback={<LoadingSpinner />}>
+        <PrivateRoute>
+          <DashboardLayout />
+        </PrivateRoute>
+      </Suspense>
     ),
-    errorElement: <ErrorBoundary />,
+    errorElement: <div>Error occurred!</div>,
     children: [
       {
         index: true,
@@ -99,6 +107,10 @@ const router = createBrowserRouter([
       </Suspense>
     ),
   },
-]);
+];
 
-export default router;
+// Create the router
+const router = createBrowserRouter(routerConfig);
+
+// Export as named export
+export { router };
