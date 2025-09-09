@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 
 const productionStages = [
   {
@@ -64,35 +64,24 @@ const productionStages = [
   },
 ];
 
-// Animation variants for desktop
+// New animation variants with more dynamic effects
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.2,
-      delayChildren: 0.3,
+      staggerChildren: 0.3,
+      delayChildren: 0.2,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { y: 40, opacity: 0, scale: 0.95 },
   visible: {
     y: 0,
     opacity: 1,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut",
-    },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: {
-    opacity: 1,
-    y: 0,
+    scale: 1,
     transition: {
       duration: 0.8,
       ease: [0.25, 0.46, 0.45, 0.94],
@@ -100,25 +89,49 @@ const cardVariants = {
   },
 };
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 60, rotateX: -15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    rotateX: 0,
+    transition: {
+      duration: 0.9,
+      ease: [0.215, 0.61, 0.355, 1],
+    },
+  },
+};
+
 const timelineVariants = {
-  hidden: { scaleY: 0 },
+  hidden: { scaleY: 0, opacity: 0 },
   visible: {
     scaleY: 1,
+    opacity: 1,
     transition: {
-      duration: 1.5,
+      duration: 1.2,
       ease: [0.43, 0.13, 0.23, 0.96],
     },
   },
 };
 
 const dotVariants = {
-  hidden: { scale: 0 },
+  hidden: { scale: 0, opacity: 0 },
   visible: {
     scale: 1,
+    opacity: 1,
     transition: {
       type: "spring",
-      damping: 12,
+      damping: 15,
       stiffness: 200,
+      delay: 0.3,
+    },
+  },
+  pulse: {
+    scale: [1, 1.2, 1],
+    transition: {
+      duration: 1.5,
+      repeat: Infinity,
+      repeatType: "reverse",
     },
   },
 };
@@ -129,29 +142,31 @@ const mobileContainerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.2,
+      staggerChildren: 0.2,
+      delayChildren: 0.1,
     },
   },
 };
 
 const mobileCardVariants = {
-  hidden: { opacity: 0, x: -50 },
+  hidden: { opacity: 0, x: -80, scale: 0.9 },
   visible: {
     opacity: 1,
     x: 0,
+    scale: 1,
     transition: {
-      duration: 0.6,
-      ease: "easeOut",
+      duration: 0.7,
+      ease: [0.25, 0.46, 0.45, 0.94],
     },
   },
 };
 
 const mobileIconVariants = {
-  hidden: { scale: 0, rotate: -180 },
+  hidden: { scale: 0, rotate: -180, opacity: 0 },
   visible: {
     scale: 1,
     rotate: 0,
+    opacity: 1,
     transition: {
       type: "spring",
       damping: 10,
@@ -160,15 +175,31 @@ const mobileIconVariants = {
   },
 };
 
+// New animation for the progress dots
+const dotIndicatorVariants = {
+  inactive: {
+    scale: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    transition: { duration: 0.3 },
+  },
+  active: {
+    scale: 1.2,
+    backgroundColor: "rgba(239, 68, 68, 1)",
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 15,
+    },
+  },
+};
+
 export default function ProductionProcess() {
   const sectionRef = useRef(null);
-  const containerRef = useRef(null);
   const videoRefs = useRef([]);
+  const scrollContainerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
   const [activeStage, setActiveStage] = useState(0);
-
-  // Use Framer Motion's useInView hook with once: true
-  const isInView = useInView(sectionRef, { once: true, amount: 0.3 });
+  const [isInView, setIsInView] = useState(false);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -183,6 +214,55 @@ export default function ProductionProcess() {
       window.removeEventListener("resize", checkMobile);
     };
   }, []);
+
+  // Intersection Observer for scroll animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          // Unobserve after first trigger to prevent re-animation
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.25 } // Trigger when 25% of the section is visible
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, []);
+
+  // Handle scroll events for mobile to update active stage indicator
+  useEffect(() => {
+    if (!isMobile || !scrollContainerRef.current) return;
+
+    const handleScroll = () => {
+      const scrollContainer = scrollContainerRef.current;
+      if (!scrollContainer) return;
+
+      const scrollPosition = scrollContainer.scrollLeft;
+      const cardWidth = scrollContainer.firstChild.firstChild.offsetWidth;
+      const newActiveStage = Math.round(scrollPosition / cardWidth);
+
+      if (newActiveStage !== activeStage) {
+        setActiveStage(newActiveStage);
+      }
+    };
+
+    const scrollContainer = scrollContainerRef.current;
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      scrollContainer.removeEventListener("scroll", handleScroll);
+    };
+  }, [isMobile, activeStage]);
 
   const handleMouseEnter = (index) => {
     if (videoRefs.current[index]) {
@@ -199,20 +279,21 @@ export default function ProductionProcess() {
     }
   };
 
-  // Mobile horizontal scroll setup
-  const { scrollXProgress } = useScroll({
-    container: containerRef,
-  });
+  // Scroll to specific card on mobile
+  const scrollToCard = (index) => {
+    if (!scrollContainerRef.current) return;
 
-  // Update active stage based on scroll position
-  useEffect(() => {
-    const unsubscribe = scrollXProgress.on("change", (latest) => {
-      const stageIndex = Math.floor(latest * (productionStages.length - 1));
-      setActiveStage(stageIndex);
+    const scrollContainer = scrollContainerRef.current;
+    const cardWidth = scrollContainer.firstChild.firstChild.offsetWidth;
+    const scrollPosition = index * cardWidth;
+
+    scrollContainer.scrollTo({
+      left: scrollPosition,
+      behavior: "smooth",
     });
 
-    return () => unsubscribe();
-  }, [scrollXProgress]);
+    setActiveStage(index);
+  };
 
   return (
     <section
@@ -237,15 +318,25 @@ export default function ProductionProcess() {
           className="text-center mb-12 md:mb-20"
           variants={isMobile ? mobileCardVariants : itemVariants}
         >
-          <h2 className="text-3xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-4">
+          <motion.h2
+            className="text-3xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600 mb-4"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
             EDITOR'S WORKFLOW
-          </h2>
-          <div className="font-mono text-red-400/80 text-sm md:text-lg">
+          </motion.h2>
+          <motion.div
+            className="font-mono text-red-400/80 text-sm md:text-lg"
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
             <span>
               Jayed&gt; _ My creative process from concept to delivery
             </span>
             <span className="ml-1 animate-pulse">_</span>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Mobile Layout */}
@@ -253,7 +344,7 @@ export default function ProductionProcess() {
           <div className="md:hidden">
             {/* Horizontal Scroller Container for Mobile */}
             <div
-              ref={containerRef}
+              ref={scrollContainerRef}
               className="overflow-x-auto pb-10 snap-x snap-mandatory hide-scrollbar"
               style={{ scrollBehavior: "smooth" }}
             >
@@ -266,7 +357,7 @@ export default function ProductionProcess() {
                     variants={mobileCardVariants}
                     initial="hidden"
                     animate={isInView ? "visible" : "hidden"}
-                    transition={{ delay: index * 0.1 }}
+                    transition={{ delay: index * 0.15 }}
                   >
                     <div
                       className="relative overflow-hidden rounded-xl border border-white/10 mb-6"
@@ -293,6 +384,9 @@ export default function ProductionProcess() {
                         <motion.span
                           className="text-3xl mr-3"
                           variants={mobileIconVariants}
+                          initial="hidden"
+                          animate={isInView ? "visible" : "hidden"}
+                          transition={{ delay: index * 0.15 + 0.2 }}
                         >
                           {stage.icon}
                         </motion.span>
@@ -310,8 +404,14 @@ export default function ProductionProcess() {
                             key={i}
                             className="flex items-start"
                             initial={{ opacity: 0, x: -10 }}
-                            animate={isInView ? { opacity: 1, x: 0 } : {}}
-                            transition={{ delay: index * 0.1 + 0.2 + i * 0.05 }}
+                            animate={
+                              isInView
+                                ? { opacity: 1, x: 0 }
+                                : { opacity: 0, x: -10 }
+                            }
+                            transition={{
+                              delay: index * 0.15 + 0.3 + i * 0.05,
+                            }}
                           >
                             <svg
                               className="w-4 h-4 mt-0.5 mr-2 text-red-400 flex-shrink-0"
@@ -336,9 +436,13 @@ export default function ProductionProcess() {
                       <motion.button
                         className="w-full px-4 py-2.5 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-white transition-all duration-300 flex items-center justify-center text-sm rounded-lg group"
                         whileTap={{ scale: 0.95 }}
-                        initial={{ opacity: 0 }}
-                        animate={isInView ? { opacity: 1 } : {}}
-                        transition={{ delay: index * 0.1 + 0.5 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={
+                          isInView
+                            ? { opacity: 1, y: 0 }
+                            : { opacity: 0, y: 20 }
+                        }
+                        transition={{ delay: index * 0.15 + 0.5 }}
                       >
                         {stage.cta}
                         <svg
@@ -364,21 +468,13 @@ export default function ProductionProcess() {
             {/* Progress indicator for mobile */}
             <div className="flex justify-center mt-6">
               {productionStages.map((_, index) => (
-                <button
+                <motion.button
                   key={index}
-                  className={`w-2 h-2 rounded-full mx-1 ${
-                    index === activeStage ? "bg-red-500" : "bg-white/30"
-                  }`}
-                  onClick={() => {
-                    const element = document.getElementById(`stage-${index}`);
-                    if (element) {
-                      element.scrollIntoView({
-                        behavior: "smooth",
-                        inline: "center",
-                      });
-                    }
-                    setActiveStage(index);
-                  }}
+                  className="w-3 h-3 rounded-full mx-1"
+                  variants={dotIndicatorVariants}
+                  initial="inactive"
+                  animate={index === activeStage ? "active" : "inactive"}
+                  onClick={() => scrollToCard(index)}
                   aria-label={`Go to stage ${index + 1}`}
                 />
               ))}
@@ -416,21 +512,28 @@ export default function ProductionProcess() {
                     className="absolute left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full bg-red-500 border-4 border-[#0a0a0a] z-10"
                     variants={dotVariants}
                     initial="hidden"
-                    animate={isInView ? "visible" : "hidden"}
+                    animate={isInView ? ["visible", "pulse"] : "hidden"}
                     transition={{ delay: index * 0.2 }}
                   />
 
                   {/* Video preview */}
                   <motion.div
                     className="flex-1 relative overflow-hidden rounded-xl border border-white/10 group"
-                    whileHover={{ scale: 1.03 }}
+                    whileHover={{
+                      scale: 1.03,
+                      boxShadow: "0 10px 30px -10px rgba(239, 68, 68, 0.3)",
+                    }}
                     transition={{
                       type: "spring",
                       stiffness: 300,
                       delay: index * 0.2 + 0.2,
                     }}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                    initial={{ opacity: 0, scale: 0.9, rotateY: 10 }}
+                    animate={
+                      isInView
+                        ? { opacity: 1, scale: 1, rotateY: 0 }
+                        : { opacity: 0, scale: 0.9, rotateY: 10 }
+                    }
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70 z-10"></div>
                     <video
@@ -451,12 +554,30 @@ export default function ProductionProcess() {
                   {/* Stage details */}
                   <motion.div
                     className="flex-1"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    initial={{
+                      opacity: 0,
+                      y: 30,
+                      x: index % 2 === 0 ? -20 : 20,
+                    }}
+                    animate={
+                      isInView
+                        ? { opacity: 1, y: 0, x: 0 }
+                        : { opacity: 0, y: 30, x: index % 2 === 0 ? -20 : 20 }
+                    }
                     transition={{ delay: index * 0.2 + 0.3 }}
                   >
                     <div className="flex items-center mb-4">
-                      <span className="text-3xl mr-3">{stage.icon}</span>
+                      <motion.span
+                        className="text-3xl mr-3"
+                        initial={{ scale: 0 }}
+                        animate={isInView ? { scale: 1 } : { scale: 0 }}
+                        transition={{
+                          delay: index * 0.2 + 0.4,
+                          type: "spring",
+                        }}
+                      >
+                        {stage.icon}
+                      </motion.span>
                       <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600">
                         {stage.title}
                       </h3>
@@ -469,8 +590,12 @@ export default function ProductionProcess() {
                           key={i}
                           className="flex items-start"
                           initial={{ opacity: 0, x: -10 }}
-                          animate={isInView ? { opacity: 1, x: 0 } : {}}
-                          transition={{ delay: index * 0.2 + 0.4 + i * 0.1 }}
+                          animate={
+                            isInView
+                              ? { opacity: 1, x: 0 }
+                              : { opacity: 0, x: -10 }
+                          }
+                          transition={{ delay: index * 0.2 + 0.5 + i * 0.1 }}
                         >
                           <svg
                             className="w-4 h-4 mt-0.5 mr-2 text-red-400 flex-shrink-0"
@@ -494,10 +619,15 @@ export default function ProductionProcess() {
 
                     <motion.button
                       className="px-4 py-2.5 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-white transition-all duration-300 flex items-center justify-center text-sm rounded-lg group"
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{
+                        scale: 1.05,
+                        backgroundColor: "rgba(239, 68, 68, 0.1)",
+                      }}
                       whileTap={{ scale: 0.95 }}
-                      initial={{ opacity: 0 }}
-                      animate={isInView ? { opacity: 1 } : {}}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={
+                        isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+                      }
                       transition={{ delay: index * 0.2 + 0.8 }}
                     >
                       {stage.cta}
@@ -525,14 +655,21 @@ export default function ProductionProcess() {
         {/* Footer CTA with Framer Motion */}
         <motion.div
           className="mt-20 md:mt-32 text-center"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.5 }}
+          initial={{ opacity: 0, y: 40, scale: 0.95 }}
+          animate={
+            isInView
+              ? { opacity: 1, y: 0, scale: 1 }
+              : { opacity: 0, y: 40, scale: 0.95 }
+          }
+          transition={{ delay: 0.6, type: "spring", stiffness: 100 }}
         >
           <a href="#contact">
             <motion.button
               className="px-6 py-3 md:px-8 md:py-4 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg relative overflow-hidden group"
-              whileHover={{ scale: isMobile ? 1 : 1.03 }}
+              whileHover={{
+                scale: isMobile ? 1 : 1.05,
+                boxShadow: "0 10px 25px -5px rgba(239, 68, 68, 0.4)",
+              }}
               whileTap={{ scale: 0.97 }}
             >
               <span className="relative z-10">Start Your Project</span>
@@ -540,9 +677,14 @@ export default function ProductionProcess() {
             </motion.button>
           </a>
 
-          <p className="mt-4 md:mt-6 text-white/60 text-sm font-mono">
+          <motion.p
+            className="mt-4 md:mt-6 text-white/60 text-sm font-mono"
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+            transition={{ delay: 0.8 }}
+          >
             Let's collaborate on something extraordinary
-          </p>
+          </motion.p>
         </motion.div>
       </motion.div>
 
