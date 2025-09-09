@@ -2,13 +2,11 @@ import { Navigate } from "react-router-dom";
 import LoadingSpinner from "../sections/LoadingSpinner";
 import { useEffect, useState } from "react";
 
-// Moved outside component to avoid recreation on each render
 const checkAuthentication = () => {
   try {
     const token = localStorage.getItem("token");
-    // More robust check for valid token
     return (
-      !!token && token !== "undefined" && token !== "null" && token.length > 10 // Most tokens are longer than 10 characters
+      !!token && token !== "undefined" && token !== "null" && token.length > 10
     );
   } catch (error) {
     console.error("Authentication check failed:", error);
@@ -17,42 +15,25 @@ const checkAuthentication = () => {
 };
 
 const PrivateRoute = ({ children }) => {
-  const [authStatus, setAuthStatus] = useState({
-    checked: false,
-    isAuthenticated: false,
-  });
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
-    let isActive = true;
+    // Use a simple timeout to avoid blocking the UI thread
+    const timer = setTimeout(() => {
+      setIsAuthenticated(checkAuthentication());
+    }, 0); // Minimal delay to allow UI to render
 
-    // Immediate check without artificial delay
-    const authenticated = checkAuthentication();
-
-    // Use requestAnimationFrame to avoid blocking UI thread
-    const id = requestAnimationFrame(() => {
-      if (isActive) {
-        setAuthStatus({
-          checked: true,
-          isAuthenticated: authenticated,
-        });
-      }
-    });
-
-    // Cleanup function
-    return () => {
-      isActive = false;
-      cancelAnimationFrame(id);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   // Show loading spinner while checking authentication
-  if (!authStatus.checked) {
+  if (isAuthenticated === null) {
     return <LoadingSpinner />;
   }
 
-  // Redirect if not authenticated - use a valid path
-  if (!authStatus.isAuthenticated) {
-    return <Navigate to="/" replace />;
+  // Redirect if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/*" replace />;
   }
 
   // Render children if authenticated

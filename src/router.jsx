@@ -54,11 +54,11 @@ export const routerConfig = [
   {
     path: "dashboard",
     element: (
-      <PrivateRoute>
-        <Suspense fallback={<LoadingSpinner />}>
+      <Suspense fallback={<LoadingSpinner />}>
+        <PrivateRoute>
           <DashboardLayout />
-        </Suspense>
-      </PrivateRoute>
+        </PrivateRoute>
+      </Suspense>
     ),
     errorElement: <ErrorBoundary />,
     children: [
@@ -74,7 +74,11 @@ export const routerConfig = [
   },
   {
     path: "*",
-    element: <NotFoundPage />,
+    element: (
+      <Suspense fallback={<LoadingSpinner />}>
+        <NotFoundPage />
+      </Suspense>
+    ),
   },
 ];
 
