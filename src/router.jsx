@@ -55,9 +55,9 @@ export const routerConfig = [
     path: "dashboard",
     element: (
       <Suspense fallback={<LoadingSpinner />}>
-        <PrivateRoute>
-          <DashboardLayout />
-        </PrivateRoute>
+        {/* <PrivateRoute> */}
+        <DashboardLayout />
+        {/* </PrivateRoute> */}
       </Suspense>
     ),
     errorElement: <ErrorBoundary />,
