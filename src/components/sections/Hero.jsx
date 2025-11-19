@@ -281,7 +281,7 @@ export default function Hero() {
       const filmLoop = gsap.timeline({ repeat: -1 });
       filmLoop.to(filmStripRef.current, {
         x: "-=100%",
-        duration: isMobile ? 40 : 60, // Faster on mobile
+        duration: isMobile ? 40 : 60,
         ease: "none",
         modifiers: {
           x: gsap.utils.unitize((x) => parseFloat(x) % 100),
