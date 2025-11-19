@@ -13,6 +13,7 @@ export default function Hero() {
   const videoRefs = useRef([]);
   const particlesRef = useRef([]);
   const lightRef = useRef();
+  const glassRef = useRef();
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [activeFrame, setActiveFrame] = useState(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -85,6 +86,17 @@ export default function Hero() {
         x: `${x}%`,
         y: `${y}%`,
         duration: 1.2,
+        ease: "expo.out",
+        overwrite: "auto",
+      });
+    }
+
+    // Glass effect follows mouse with slight delay for smoothness
+    if (glassRef.current) {
+      gsap.to(glassRef.current, {
+        x: `${x}%`,
+        y: `${y}%`,
+        duration: 2,
         ease: "expo.out",
         overwrite: "auto",
       });
@@ -183,6 +195,28 @@ export default function Hero() {
 
     if (lightRef.current) {
       gsap.set(lightRef.current, { opacity: 0 });
+    }
+
+    if (glassRef.current) {
+      gsap.set(glassRef.current, {
+        opacity: 0,
+        scale: 0.8,
+        filter: "blur(20px) brightness(1.1)",
+      });
+    }
+
+    // Glass morphism reveal
+    if (glassRef.current) {
+      animationRef.current.masterTl.to(
+        glassRef.current,
+        {
+          opacity: isMobile ? 0.3 : 0.4,
+          scale: 1,
+          duration: 2,
+          ease: "expo.out",
+        },
+        0.5
+      );
     }
 
     // Light reveal
@@ -432,6 +466,35 @@ export default function Hero() {
         transition: "background 0.5s ease-out",
       }}
     >
+      {/* Less Blurry Lequied Glass Morphism Effect */}
+      <div
+        ref={glassRef}
+        className="absolute rounded-full pointer-events-none will-change-transform"
+        style={{
+          width: windowSize.width < 768 ? "300px" : "500px",
+          height: windowSize.width < 768 ? "300px" : "500px",
+          background: `
+            radial-gradient(
+              circle at center,
+              rgba(255, 255, 255, 0.12) 0%,
+              rgba(255, 255, 255, 0.08) 30%,
+              rgba(255, 255, 255, 0.04) 50%,
+              transparent 70%
+            )
+          `,
+          backdropFilter: "blur(15px) brightness(1.05)",
+          WebkitBackdropFilter: "blur(15px) brightness(1.05)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: `
+            0 8px 25px 0 rgba(31, 38, 135, 0.15),
+            inset 0 2px 12px 0 rgba(255, 255, 255, 0.08),
+            inset 0 -2px 12px 0 rgba(0, 0, 0, 0.1)
+          `,
+          transform: "translate(-50%, -50%)",
+          mixBlendMode: "soft-light",
+        }}
+      />
+
       {/* Dynamic light with responsive size */}
       <div
         ref={lightRef}
@@ -530,7 +593,7 @@ export default function Hero() {
         })}
       </div>
 
-      {/* Improved Content with better visibility */}
+      {/* Content with Less Blurry Glass Effect */}
       <div
         ref={textRef}
         className="relative z-30 text-center px-4 w-full"
@@ -544,10 +607,38 @@ export default function Hero() {
           paddingBottom: windowSize.width < 768 ? "60px" : "0",
         }}
       >
-        {/* Text container with semi-transparent background for better readability */}
-        <div className="inline-block bg-black/40 backdrop-blur-sm rounded-2xl px-6 py-4 md:px-8 md:py-6 border border-white/10">
+        {/* Less Blurry Glass Container */}
+        <div
+          className="inline-block rounded-4xl px-8 py-8 md:px-12 md:py-10 border border-white/15 relative overflow-hidden"
+          style={{
+            background: "rgba(255, 255, 255, 0.08)",
+            backdropFilter: "blur(12px) saturate(160%)",
+            WebkitBackdropFilter: "blur(12px) saturate(160%)",
+            boxShadow: `
+              0 8px 25px 0 rgba(0, 0, 0, 0.25),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.15),
+              inset 0 -1px 0 0 rgba(0, 0, 0, 0.1)
+            `,
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+          }}
+        >
+          {/* Subtle inner glow effect */}
+          <div
+            className="absolute inset-0 rounded-2xl pointer-events-none"
+            style={{
+              background: `
+                radial-gradient(
+                  circle at 50% 0%,
+                  rgba(255, 255, 255, 0.06) 0%,
+                  transparent 50%
+                )
+              `,
+              mixBlendMode: "overlay",
+            }}
+          />
+
           <h1
-            className="font-bold mb-4 md:mb-6 text-neutral-100 tracking-tight"
+            className="font-bold mb-4 md:mb-6 text-neutral-100 tracking-tight relative z-10"
             style={{
               fontSize:
                 windowSize.width < 640
@@ -568,7 +659,7 @@ export default function Hero() {
           </h1>
 
           <p
-            className="text-neutral-200 mb-6 md:mb-8 mx-auto leading-relaxed"
+            className="text-neutral-200 mb-6 md:mb-8 mx-auto leading-relaxed relative z-10"
             style={{
               fontSize: windowSize.width < 768 ? "1rem" : "1.2rem",
               maxWidth: windowSize.width < 768 ? "100%" : "42rem",
@@ -582,14 +673,14 @@ export default function Hero() {
             that captivate audiences.
           </p>
 
-          <div className="flex gap-3 md:gap-4 justify-center flex-wrap">
+          <div className="flex gap-3 md:gap-4 justify-center flex-wrap relative z-10">
             <a
               href="#showreel"
-              className="px-6 py-3 md:px-8 md:py-4 bg-red-500 text-neutral-50 rounded-full hover:bg-red-600 transition-all transform hover:scale-[1.03] flex items-center group will-change-transform text-sm md:text-base shadow-lg"
+              className="px-6 py-3 md:px-8 md:py-4 bg-red-500 text-neutral-50 rounded-full hover:bg-red-600 transition-all transform hover:scale-[1.03] flex items-center group will-change-transform text-sm md:text-base shadow-lg relative overflow-hidden"
             >
-              <span>View Portfolio</span>
+              <span className="relative z-10">View Portfolio</span>
               <svg
-                className="w-4 h-4 md:w-5 md:h-5 ml-2 transition-transform group-hover:translate-x-1"
+                className="w-4 h-4 md:w-5 md:h-5 ml-2 transition-transform group-hover:translate-x-1 relative z-10"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -601,18 +692,35 @@ export default function Hero() {
                   d="M9 5l7 7-7 7"
                 ></path>
               </svg>
+              {/* Button glass overlay */}
+              <div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  background: "rgba(255, 255, 255, 0.08)",
+                  backdropFilter: "blur(6px)",
+                }}
+              />
             </a>
+
             <a
               href="#contact"
-              className="px-6 py-3 md:px-8 md:py-4 bg-white/10 backdrop-blur-sm border border-white/20 text-neutral-200 rounded-full hover:bg-white hover:text-neutral-900 transition-all transform hover:scale-[1.03] will-change-transform text-sm md:text-base shadow-lg"
+              className="px-6 py-3 md:px-8 md:py-4 bg-white/08 backdrop-blur-sm border border-white/15 text-neutral-200 rounded-full hover:bg-white hover:text-neutral-900 transition-all transform hover:scale-[1.03] will-change-transform text-sm md:text-base shadow-lg relative overflow-hidden"
             >
-              Get in Touch
+              <span className="relative z-10">Get in Touch</span>
+              {/* Button glass overlay */}
+              <div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                style={{
+                  background: "rgba(255, 255, 255, 0.04)",
+                  backdropFilter: "blur(4px)",
+                }}
+              />
             </a>
           </div>
         </div>
       </div>
 
-      {/* Playback control with responsive positioning */}
+      {/* Playback control with less blurry glass effect */}
       <div
         className="absolute z-20 flex items-center"
         style={{
@@ -622,15 +730,18 @@ export default function Hero() {
       >
         <button
           onClick={togglePlayback}
-          className="playback-btn rounded-full bg-neutral-900/80 border border-neutral-700 flex items-center justify-center hover:bg-neutral-800 transition-all duration-300 will-change-transform"
+          className="playback-btn rounded-full flex items-center justify-center hover:scale-105 transition-all duration-300 will-change-transform relative overflow-hidden"
           style={{
             width: windowSize.width < 768 ? "40px" : "48px",
             height: windowSize.width < 768 ? "40px" : "48px",
+            background: "rgba(255, 255, 255, 0.08)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
           }}
         >
           {isPlaying ? (
             <svg
-              className="text-neutral-300"
+              className="text-neutral-300 relative z-10"
               style={{
                 width: windowSize.width < 768 ? "16px" : "20px",
                 height: windowSize.width < 768 ? "16px" : "20px",
@@ -648,7 +759,7 @@ export default function Hero() {
             </svg>
           ) : (
             <svg
-              className="text-neutral-300"
+              className="text-neutral-300 relative z-10"
               style={{
                 width: windowSize.width < 768 ? "16px" : "20px",
                 height: windowSize.width < 768 ? "16px" : "20px",
@@ -676,7 +787,7 @@ export default function Hero() {
         </span>
       </div>
 
-      {/* Scrolling indicator with responsive positioning */}
+      {/* Scrolling indicator with less blurry glass effect */}
       <div
         className="absolute z-20"
         style={{
@@ -684,7 +795,15 @@ export default function Hero() {
           right: windowSize.width < 768 ? "16px" : "32px",
         }}
       >
-        <div className="animate-bounce flex flex-col items-center">
+        <div
+          className="animate-bounce flex flex-col items-center p-3 rounded-xl"
+          style={{
+            background: "rgba(255, 255, 255, 0.08)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            border: "1px solid rgba(255, 255, 255, 0.12)",
+          }}
+        >
           <div className="w-5 h-8 md:w-6 md:h-10 border-2 border-red-500/50 rounded-full flex justify-center">
             <div className="w-1 h-2 bg-red-500 mt-2 rounded-full animate-scrollPulse"></div>
           </div>

@@ -141,7 +141,7 @@ export default function ProfilePage() {
 
       {/* Corner accents */}
       <div className="absolute top-0 left-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
 
       <div className="container mx-auto px-4 py-20 relative z-20">
         <motion.div
@@ -217,7 +217,7 @@ export default function ProfilePage() {
                 {/* Profile image */}
                 <div className="md:col-span-1 flex flex-col items-center">
                   <div className="relative w-40 h-40 rounded-full border-4 border-red-500/30 overflow-hidden mb-4">
-                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-blue-500/10"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-red-500/10"></div>
                     <div className="absolute inset-0 bg-[url('/image/jayed-2.JPG')] bg-cover bg-center"></div>
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjAzIiBudW1PY3RhdmVzPSIyIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4xIi8+Cjwvc3ZnPg==')] opacity-20"></div>
                   </div>

@@ -733,7 +733,7 @@ export default function EasterEgg() {
 
                         {/* Item 2 */}
                         <div className="relative group">
-                          <div className="absolute -left-12 top-2 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/20 transition-all duration-300 group-hover:scale-110">
+                          <div className="absolute -left-12 top-2 w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-500/20 transition-all duration-300 group-hover:scale-110">
                             <svg
                               className="w-4 h-4"
                               fill="none"
@@ -749,11 +749,11 @@ export default function EasterEgg() {
                             </svg>
                           </div>
 
-                          <div className="bg-gradient-to-r from-black/30 to-black/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm hover:border-blue-500/30 transition-all duration-300">
+                          <div className="bg-gradient-to-r from-black/30 to-black/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm hover:border-red-500/30 transition-all duration-300">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                               <div className="flex-1">
                                 <div className="flex items-center gap-3 mb-2">
-                                  <span className="text-xs font-mono px-2 py-1 rounded bg-blue-900/30 text-blue-400 border border-blue-800/50">
+                                  <span className="text-xs font-mono px-2 py-1 rounded bg-red-900/30 text-red-400 border border-red-800/50">
                                     BREAKTHROUGH
                                   </span>
                                   <span className="text-xs text-white/50">
@@ -780,7 +780,7 @@ export default function EasterEgg() {
                                       MacBook Pro
                                     </div>
                                   </div>
-                                  <div className="absolute -bottom-1 -right-1 bg-blue-500 text-white text-[8px] px-1 rounded">
+                                  <div className="absolute -bottom-1 -right-1 bg-red-500 text-white text-[8px] px-1 rounded">
                                     REWARD
                                   </div>
                                 </div>
@@ -1269,7 +1269,7 @@ export default function EasterEgg() {
 
             {/* Corner accents */}
             <div className="absolute top-0 left-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
-            <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -z-10"></div>
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
           </motion.section>
         </div>
       )}

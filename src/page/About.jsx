@@ -456,7 +456,7 @@ const About = () => {
 
       {/* Subtle corner accents */}
       <div className="absolute top-0 left-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
     </section>
   );
 };

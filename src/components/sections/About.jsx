@@ -352,7 +352,7 @@ export default function About() {
               />
             </div>
             {/* Outer glow */}
-            <div className="absolute -z-10 -inset-4 bg-gradient-to-br from-red-500/10 via-transparent to-blue-500/5 blur-lg rounded-sm"></div>
+            <div className="absolute -z-10 -inset-4 bg-gradient-to-br from-red-500/10 via-transparent to-red-500/5 blur-lg rounded-sm"></div>
           </div>
 
           {/* Story content */}
@@ -660,7 +660,7 @@ export default function About() {
 
       {/* Subtle corner accents */}
       <div className="absolute top-0 left-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl -z-10"></div>
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
 
       {/* Custom scrollbar styles */}
       <style jsx global>{`
