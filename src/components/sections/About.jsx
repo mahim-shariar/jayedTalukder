@@ -1,43 +1,1005 @@
-import { useRef, useEffect, useState } from "react";
-import { gsap } from "gsap";
-import { TextPlugin } from "gsap/TextPlugin";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useRef, useEffect, useState, useMemo, useCallback } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValue,
+  useSpring,
+} from "framer-motion";
 import jayed_Profile from "/image/jayed-2.JPG";
 import macbookImage from "/image/jayed-9.jpg";
 import { getVideoReelsByCategory } from "../../services/api";
 
-gsap.registerPlugin(TextPlugin, ScrollTrigger);
+// Background particles configuration
+const particlePositions = [
+  { top: "10%", left: "15%", size: "w-3 h-3", color: "bg-red-500/20" },
+  { top: "20%", left: "80%", size: "w-2 h-2", color: "bg-red-400/15" },
+  { top: "30%", left: "25%", size: "w-3 h-3", color: "bg-red-500/20" },
+  { top: "40%", left: "70%", size: "w-2 h-2", color: "bg-red-400/15" },
+  { top: "50%", left: "10%", size: "w-3 h-3", color: "bg-red-500/20" },
+  { top: "60%", left: "85%", size: "w-2 h-2", color: "bg-red-400/15" },
+  { top: "70%", left: "35%", size: "w-3 h-3", color: "bg-red-500/20" },
+  { top: "80%", left: "65%", size: "w-2 h-2", color: "bg-red-400/15" },
+];
 
+// Background Animation Component
+const BackgroundAnimation = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none will-change-transform">
+    {/* Gradient Orbs - Red theme */}
+    <motion.div
+      className="absolute top-20 left-10 w-60 h-60 bg-gradient-to-r from-red-600/10 to-red-500/15 rounded-full z-0 blur-3xl"
+      animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.35, 0.2] }}
+      transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="absolute bottom-20 right-10 w-52 h-52 bg-gradient-to-r from-red-500/10 to-red-600/15 rounded-full z-0 blur-3xl"
+      animate={{ scale: [1.15, 1, 1.15], opacity: [0.25, 0.15, 0.25] }}
+      transition={{
+        duration: 10,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 2,
+      }}
+    />
+    <motion.div
+      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-red-600/5 to-red-500/8 rounded-full z-0 blur-3xl"
+      animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.2, 0.1] }}
+      transition={{
+        duration: 15,
+        repeat: Infinity,
+        ease: "easeInOut",
+        delay: 1,
+      }}
+    />
+
+    {/* Floating Particles - Red theme */}
+    {particlePositions.map((particle, i) => (
+      <motion.div
+        key={i}
+        className={`absolute rounded-full ${particle.size} ${particle.color} z-10`}
+        style={{ top: particle.top, left: particle.left }}
+        animate={{
+          y: [0, -30, 0],
+          x: [0, Math.random() * 20 - 10, 0],
+          scale: [1, 1.1, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 6 + Math.random() * 4,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: Math.random() * 3,
+        }}
+      />
+    ))}
+
+    {/* Grid Pattern */}
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(239,68,68,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(239,68,68,0.015)_1px,transparent_1px)] bg-[size:50px_50px]" />
+
+    {/* Grain texture */}
+    <div
+      className="absolute inset-0 opacity-15"
+      style={{
+        backgroundImage: `url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')`,
+      }}
+    />
+  </div>
+);
+
+// Liquid Glass Video Card Component
+const LiquidGlassVideoCard = ({
+  video,
+  loading,
+  videoPlaying,
+  onPlay,
+  videoRef,
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef(null);
+
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { damping: 20, stiffness: 150 };
+  const rotateX = useSpring(
+    useTransform(mouseY, [-0.5, 0.5], [5, -5]),
+    springConfig
+  );
+  const rotateY = useSpring(
+    useTransform(mouseX, [-0.5, 0.5], [-5, 5]),
+    springConfig
+  );
+  const glowX = useSpring(mouseX, { damping: 25, stiffness: 120 });
+  const glowY = useSpring(mouseY, { damping: 25, stiffness: 120 });
+
+  const handleMouseMove = useCallback((e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(0);
+    mouseY.set(0);
+    setIsHovered(false);
+  }, []);
+
+  return (
+    <motion.div
+      className="w-full lg:w-1/2 h-[400px] lg:h-[600px]"
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+    >
+      <motion.div
+        ref={cardRef}
+        className="relative group perspective-[1200px] h-full"
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          rotateX,
+          rotateY,
+          transformStyle: "preserve-3d",
+        }}
+      >
+        <div className="relative rounded-2xl md:rounded-3xl p-px overflow-hidden h-full">
+          {/* Subtle border gradient */}
+          <motion.div
+            className="absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-500"
+            style={{
+              background: useTransform(
+                [glowX, glowY],
+                ([x, y]) =>
+                  `radial-gradient(circle at ${(x + 0.5) * 100}% ${
+                    (y + 0.5) * 100
+                  }%, rgba(255,255,255,0.12) 0%, transparent 70%)`
+              ),
+            }}
+          />
+
+          {/* Card body - Liquid Glass */}
+          <div
+            className="relative rounded-[22px] md:rounded-[30px] overflow-hidden h-full"
+            style={{
+              background: "rgba(20, 20, 20, 0.65)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              boxShadow: `
+                0 25px 35px -12px rgba(0, 0, 0, 0.5),
+                inset 0 1px 1px rgba(255, 255, 255, 0.05),
+                inset 0 -1px 1px rgba(0, 0, 0, 0.1)
+              `,
+            }}
+          >
+            {/* Dynamic light overlay */}
+            <motion.div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10"
+              style={{
+                background: useTransform(
+                  [glowX, glowY],
+                  ([x, y]) =>
+                    `radial-gradient(circle at ${(x + 0.5) * 100}% ${
+                      (y + 0.5) * 100
+                    }%, rgba(255,255,255,0.06) 0%, transparent 60%)`
+                ),
+              }}
+            />
+
+            {/* Liquid glass layers */}
+            <div className="absolute inset-0 pointer-events-none z-10">
+              <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/8 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-gradient-to-t from-black/20 to-transparent" />
+              <div className="absolute top-0 bottom-0 left-0 w-px bg-gradient-to-b from-transparent via-white/8 to-transparent" />
+              <div className="absolute top-0 bottom-0 right-0 w-px bg-gradient-to-b from-transparent via-white/4 to-transparent" />
+            </div>
+
+            {loading ? (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative">
+                  <motion.div
+                    className="w-12 h-12 rounded-full border-t-2 border-b-2 border-red-500"
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  />
+                  <motion.div
+                    className="absolute inset-0 rounded-full opacity-30 blur-md"
+                    style={{
+                      background:
+                        "radial-gradient(circle, rgba(239,68,68,0.5) 0%, transparent 70%)",
+                    }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10 pointer-events-none" />
+                <video
+                  ref={videoRef}
+                  playsInline
+                  className="w-full h-full object-cover"
+                  src={video?.videoUrl || "/assets/reel.mp4"}
+                  poster={video?.thumbnailUrl}
+                  onClick={onPlay}
+                >
+                  <source
+                    src={video?.videoUrl || "/assets/reel.mp4"}
+                    type={
+                      video?.videoUrl?.endsWith(".webm")
+                        ? "video/webm"
+                        : "video/mp4"
+                    }
+                  />
+                </video>
+
+                {!videoPlaying && (
+                  <motion.div
+                    className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer"
+                    onClick={onPlay}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <motion.div
+                      className="w-16 h-16 rounded-full flex items-center justify-center relative"
+                      style={{
+                        background: "rgba(239, 68, 68, 0.2)",
+                        backdropFilter: "blur(8px)",
+                        border: "1px solid rgba(239, 68, 68, 0.3)",
+                        boxShadow: "0 0 30px rgba(239, 68, 68, 0.3)",
+                      }}
+                      whileHover={{ scale: 1.1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20,
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0 rounded-full opacity-50 blur-md"
+                        style={{
+                          background:
+                            "radial-gradient(circle, rgba(239,68,68,0.5) 0%, transparent 70%)",
+                        }}
+                      />
+                      <svg
+                        className="w-8 h-8 text-white relative z-10"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </motion.div>
+                  </motion.div>
+                )}
+
+                <motion.div
+                  className="absolute bottom-4 left-4 px-4 py-2 rounded-full text-sm font-mono z-20"
+                  style={{
+                    background: "rgba(0, 0, 0, 0.6)",
+                    backdropFilter: "blur(8px)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {video ? `▶︎ ${video.title}` : "▶︎ REEL_2024.MP4"}
+                </motion.div>
+
+                <div className="absolute top-4 right-4 flex gap-2 z-20">
+                  {[
+                    { color: "bg-red-500", shadow: "shadow-red-900/50" },
+                    { color: "bg-yellow-500", shadow: "shadow-yellow-900/50" },
+                    { color: "bg-green-500", shadow: "shadow-green-900/50" },
+                  ].map((dot, i) => (
+                    <motion.span
+                      key={i}
+                      className={`w-3 h-3 rounded-full ${dot.color} shadow-lg ${dot.shadow} relative`}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.1 * i, type: "spring" }}
+                    >
+                      <span className="absolute inset-0 rounded-full bg-white/20 blur-[2px]" />
+                    </motion.span>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {/* Edge highlights */}
+            <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent z-10" />
+            <div className="absolute bottom-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent z-10" />
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Liquid Glass Card for Philosophy/Specialty - Equal Height
+const LiquidGlassInfoCard = ({ title, content }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef(null);
+
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { damping: 20, stiffness: 150 };
+  const rotateX = useSpring(
+    useTransform(mouseY, [-0.5, 0.5], [3, -3]),
+    springConfig
+  );
+  const rotateY = useSpring(
+    useTransform(mouseX, [-0.5, 0.5], [-3, 3]),
+    springConfig
+  );
+  const glowX = useSpring(mouseX, { damping: 25, stiffness: 120 });
+  const glowY = useSpring(mouseY, { damping: 25, stiffness: 120 });
+
+  const handleMouseMove = useCallback((e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(0);
+    mouseY.set(0);
+    setIsHovered(false);
+  }, []);
+
+  return (
+    <motion.div
+      ref={cardRef}
+      className="relative group perspective-[1200px] h-full"
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX,
+        rotateY,
+        transformStyle: "preserve-3d",
+      }}
+    >
+      <div className="relative rounded-2xl p-px overflow-hidden h-full">
+        <motion.div
+          className="absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-500"
+          style={{
+            background: useTransform(
+              [glowX, glowY],
+              ([x, y]) =>
+                `radial-gradient(circle at ${(x + 0.5) * 100}% ${
+                  (y + 0.5) * 100
+                }%, rgba(255,255,255,0.12) 0%, transparent 70%)`
+            ),
+          }}
+        />
+
+        <div
+          className="relative p-5 rounded-[22px] overflow-hidden h-full flex flex-col"
+          style={{
+            background: "rgba(20, 20, 20, 0.55)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            boxShadow: `
+              0 25px 35px -12px rgba(0, 0, 0, 0.4),
+              inset 0 1px 1px rgba(255, 255, 255, 0.05)
+            `,
+            minHeight: "100px",
+          }}
+        >
+          <motion.div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{
+              background: useTransform(
+                [glowX, glowY],
+                ([x, y]) =>
+                  `radial-gradient(circle at ${(x + 0.5) * 100}% ${
+                    (y + 0.5) * 100
+                  }%, rgba(255,255,255,0.05) 0%, transparent 60%)`
+              ),
+            }}
+          />
+
+          <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
+          <h3 className="text-red-400 mb-2 font-medium relative z-10">
+            {title}
+          </h3>
+          <p className="text-sm text-white/80 relative z-10 flex-1">
+            "{content}"
+          </p>
+
+          <motion.div
+            className="absolute bottom-2 right-2 w-1.5 h-1.5"
+            animate={{
+              opacity: isHovered ? 0.6 : 0.2,
+            }}
+          >
+            <div className="absolute inset-0 bg-white/30 rounded-full blur-[1px]" />
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+// Liquid Glass Profile Image Component - Fixed overflow for EDITOR'S CUT badge
+const LiquidGlassProfileImage = ({ imageLoaded, setImageLoaded }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef(null);
+
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springConfig = { damping: 20, stiffness: 150 };
+  const rotateX = useSpring(
+    useTransform(mouseY, [-0.5, 0.5], [4, -4]),
+    springConfig
+  );
+  const rotateY = useSpring(
+    useTransform(mouseX, [-0.5, 0.5], [-4, 4]),
+    springConfig
+  );
+  const glowX = useSpring(mouseX, { damping: 25, stiffness: 120 });
+  const glowY = useSpring(mouseY, { damping: 25, stiffness: 120 });
+
+  const handleMouseMove = useCallback((e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    mouseX.set(x);
+    mouseY.set(y);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    mouseX.set(0);
+    mouseY.set(0);
+    setIsHovered(false);
+  }, []);
+
+  return (
+    <motion.div
+      className="relative float-right ml-4 md:ml-6 mb-8 md:mb-10"
+      initial={{ x: -100, opacity: 0 }}
+      whileInView={{ x: 0, opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
+    >
+      <div className="w-40 h-40 md:w-48 md:h-48 relative">
+        {/* Outer glow */}
+        <motion.div
+          className="absolute -z-10 -inset-4 blur-xl rounded-2xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(239,68,68,0.15) 0%, transparent 70%)",
+          }}
+          animate={{
+            scale: isHovered ? 1.1 : 1,
+            opacity: isHovered ? 0.8 : 0.5,
+          }}
+          transition={{ duration: 0.4 }}
+        />
+
+        {!imageLoaded && (
+          <div
+            className="absolute inset-0 rounded-2xl overflow-hidden"
+            style={{
+              background:
+                "linear-gradient(90deg, rgb(64,64,64) 0%, rgb(82,82,82) 25%, rgb(100,100,100) 50%, rgb(82,82,82) 75%, rgb(64,64,64) 100%)",
+              backgroundSize: "200% 100%",
+              animation: "shimmerSlide 2s ease-in-out infinite",
+            }}
+          />
+        )}
+
+        <motion.div
+          ref={cardRef}
+          className="relative group perspective-[1200px] h-full"
+          onMouseMove={handleMouseMove}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={handleMouseLeave}
+          style={{
+            rotateX,
+            rotateY,
+            transformStyle: "preserve-3d",
+          }}
+        >
+          {/* Removed overflow-hidden from this container */}
+          <div className="relative rounded-2xl p-px h-full">
+            <motion.div
+              className="absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-500 rounded-2xl"
+              style={{
+                background: useTransform(
+                  [glowX, glowY],
+                  ([x, y]) =>
+                    `radial-gradient(circle at ${(x + 0.5) * 100}% ${
+                      (y + 0.5) * 100
+                    }%, rgba(255,255,255,0.12) 0%, transparent 70%)`
+                ),
+              }}
+            />
+
+            {/* Image container with overflow-hidden for the image itself */}
+            <div
+              className={`relative rounded-[22px] overflow-hidden transition-opacity duration-500 h-full ${
+                imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              style={{
+                background: "rgba(255, 255, 255, 0.05)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                boxShadow: `
+                  0 0 40px rgba(239, 68, 68, 0.2),
+                  inset 0 1px 0 0 rgba(255, 255, 255, 0.1)
+                `,
+              }}
+            >
+              <div
+                className="w-full h-full bg-cover bg-center relative"
+                style={{ backgroundImage: `url(${jayed_Profile})` }}
+              >
+                <div className="absolute inset-0 shadow-[inset_0_0_40px_10px_rgba(0,0,0,0.7)]"></div>
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjAzIiBudW1PY3RhdmVzPSIyIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4xNSIvPgo8L3N2Zz4=')] opacity-30"></div>
+              </div>
+
+              {/* Dynamic light overlay */}
+              <motion.div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                style={{
+                  background: useTransform(
+                    [glowX, glowY],
+                    ([x, y]) =>
+                      `radial-gradient(circle at ${(x + 0.5) * 100}% ${
+                        (y + 0.5) * 100
+                      }%, rgba(255,255,255,0.08) 0%, transparent 60%)`
+                  ),
+                }}
+              />
+
+              <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/8 to-transparent pointer-events-none" />
+            </div>
+
+            {/* EDITOR'S CUT Badge - Moved OUTSIDE the overflow-hidden container */}
+            <motion.div
+              className="absolute -bottom-3 -right-3 md:-bottom-4 md:-right-4 z-30"
+              whileHover={{ scale: 1.05, rotate: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <div
+                className="relative px-3 py-1.5 md:px-4 md:py-2 rounded-full"
+                style={{
+                  background: "rgba(239, 68, 68, 0.25)",
+                  backdropFilter: "blur(10px)",
+                  WebkitBackdropFilter: "blur(10px)",
+                  border: "1.5px solid rgba(239, 68, 68, 0.5)",
+                  boxShadow: `
+                    0 4px 20px rgba(239, 68, 68, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.15)
+                  `,
+                }}
+              >
+                {/* Inner glow */}
+                <div
+                  className="absolute inset-0 rounded-full opacity-50"
+                  style={{
+                    background:
+                      "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15) 0%, transparent 70%)",
+                  }}
+                />
+
+                {/* Rotated text */}
+                <span
+                  className="relative z-10 text-white font-bold tracking-wider text-[10px] md:text-xs flex items-center gap-1"
+                  style={{ transform: "rotate(-1deg)" }}
+                >
+                  <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
+                  EDITOR'S CUT
+                  <span className="w-1.5 h-1.5 bg-red-400 rounded-full animate-pulse" />
+                </span>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        <img
+          src={jayed_Profile}
+          alt="Jayed Profile"
+          className="hidden"
+          onLoad={() => setImageLoaded(true)}
+        />
+      </div>
+    </motion.div>
+  );
+};
+
+// Liquid Glass Modal Component
+const LiquidGlassModal = ({
+  showBio,
+  toggleBio,
+  macbookImageLoaded,
+  setMacbookImageLoaded,
+}) => {
+  if (!showBio) return null;
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* Dark overlay with blur */}
+      <motion.div
+        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        onClick={toggleBio}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      />
+
+      {/* Film strip borders */}
+      <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-r from-black/80 via-red-950/20 to-black/80 backdrop-blur-sm border-b border-white/10" />
+      <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-r from-black/80 via-red-950/20 to-black/80 backdrop-blur-sm border-t border-white/10" />
+
+      {/* Modal content */}
+      <motion.div
+        className="relative z-10 max-w-4xl w-full max-h-[80vh] overflow-y-auto rounded-3xl p-6 md:p-8 scrollbar-custom"
+        style={{
+          background: "rgba(20, 20, 20, 0.85)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          boxShadow: `
+            0 25px 50px -12px rgba(0, 0, 0, 0.5),
+            0 0 0 1px rgba(239, 68, 68, 0.1),
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+            inset 0 -1px 0 0 rgba(0, 0, 0, 0.2)
+          `,
+        }}
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 50, opacity: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+      >
+        {/* Inner glow */}
+        <div
+          className="absolute inset-0 rounded-3xl pointer-events-none"
+          style={{
+            background: `
+              radial-gradient(
+                circle at 50% 0%,
+                rgba(239, 68, 68, 0.08) 0%,
+                transparent 50%
+              )
+            `,
+            mixBlendMode: "overlay",
+          }}
+        />
+
+        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
+        {/* Close button */}
+        <motion.button
+          onClick={toggleBio}
+          className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center z-20"
+          style={{
+            background: "rgba(239, 68, 68, 0.15)",
+            backdropFilter: "blur(8px)",
+            border: "1px solid rgba(239, 68, 68, 0.3)",
+            boxShadow: "0 0 20px rgba(239, 68, 68, 0.2)",
+          }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <svg
+            className="w-5 h-5 text-red-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </motion.button>
+
+        {/* Content */}
+        <div className="space-y-6 relative z-10">
+          <h2 className="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 mb-6">
+            <span className="font-mono text-red-500">THE_REAL_STORY</span> FROM
+            BOREDOM TO BRILLIANCE
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="md:col-span-2">
+              <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
+                CHAPTER ONE: THE AWAKENING
+              </h3>
+              <p className="text-white/80 leading-relaxed">
+                It was 2024. I was sitting in my university classroom, feeling
+                completely disconnected. The traditional education path wasn't
+                lighting me up. Then came my first paid video gig - shaky
+                footage of a local event, edited on borrowed hardware. It wasn't
+                glamorous, but that spark of creation changed everything.
+              </p>
+              <p className="text-white/80 leading-relaxed mt-4">
+                When I joined Digital Dropout Skool, it felt like someone
+                finally handed me the keys to my future. That MacBook they
+                awarded me for my performance? It became my weapon of choice -
+                my passport from boredom to creative freedom.
+              </p>
+            </div>
+            <div
+              className="p-5 rounded-2xl relative overflow-hidden"
+              style={{
+                background: "rgba(0, 0, 0, 0.3)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                boxShadow: "inset 0 1px 0 0 rgba(255, 255, 255, 0.05)",
+              }}
+            >
+              <h4 className="text-red-400 font-mono text-sm mb-3">
+                TURNING POINTS
+              </h4>
+              <ul className="space-y-3 text-sm text-white/80">
+                {[
+                  "2024: First paid video work while in university",
+                  "Joined Digital Dropout Skool program",
+                  "Earned MacBook through exceptional performance",
+                  "Found my voice in visual storytelling",
+                ].map((item, i) => (
+                  <motion.li
+                    key={i}
+                    className="flex items-start"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                  >
+                    <span className="text-red-400 mr-2">▶</span>
+                    <span>{item}</span>
+                  </motion.li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* MacBook Achievement Section */}
+          <div
+            className="mt-8 p-6 rounded-2xl relative overflow-hidden"
+            style={{
+              background: "rgba(0, 0, 0, 0.25)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+              boxShadow: `
+                0 8px 20px -5px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.05)
+              `,
+            }}
+          >
+            <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
+              MY TURNING POINT
+            </h3>
+            <div className="flex flex-col md:flex-row gap-6 items-center">
+              <div className="md:w-1/2">
+                {!macbookImageLoaded && (
+                  <div
+                    className="relative rounded-xl overflow-hidden h-48"
+                    style={{
+                      background:
+                        "linear-gradient(90deg, rgb(64,64,64) 0%, rgb(82,82,82) 25%, rgb(100,100,100) 50%, rgb(82,82,82) 75%, rgb(64,64,64) 100%)",
+                      backgroundSize: "200% 100%",
+                      animation: "shimmerSlide 2s ease-in-out infinite",
+                    }}
+                  />
+                )}
+                <motion.div
+                  className={`relative rounded-xl overflow-hidden transition-opacity duration-500 ${
+                    macbookImageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  style={{
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                    boxShadow: "0 0 30px rgba(239, 68, 68, 0.15)",
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <img
+                    src={macbookImage}
+                    alt="MacBook achievement"
+                    className="w-full h-auto object-cover"
+                    onLoad={() => setMacbookImageLoaded(true)}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <div
+                    className="absolute bottom-4 left-4 text-white font-mono text-sm px-3 py-1.5 rounded-full"
+                    style={{
+                      background: "rgba(0, 0, 0, 0.6)",
+                      backdropFilter: "blur(8px)",
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    Digital Dropout Skool Reward
+                  </div>
+                </motion.div>
+              </div>
+              <div className="md:w-1/2">
+                <p className="text-white/80 leading-relaxed">
+                  This MacBook represents more than just hardware - it
+                  symbolizes my transformation. Awarded by Digital Dropout Skool
+                  for exceptional performance, it became the tool that launched
+                  my creative journey.
+                </p>
+                <div className="mt-4 flex items-center text-red-400">
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  <span className="font-mono text-sm">
+                    Performance Reward 2025
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
+            CHAPTER TWO: THE HUSTLE
+          </h3>
+          <p className="text-white/80 leading-relaxed mb-6">
+            That MacBook became my film studio. I taught myself color grading by
+            watching YouTube tutorials at 2AM. Mastered transitions by failing
+            spectacularly on client projects.
+          </p>
+
+          <div
+            className="p-6 rounded-2xl mb-6 relative overflow-hidden"
+            style={{
+              background: "rgba(0, 0, 0, 0.25)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(255, 255, 255, 0.08)",
+            }}
+          >
+            <h4 className="text-red-400 font-mono text-sm mb-3">
+              CREATIVE TOOLS
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+              {[
+                {
+                  name: "My Trusted MacBook",
+                  desc: "First real creative tool",
+                },
+                { name: "DaVinci Resolve", desc: "Color grading wizardry" },
+                { name: "Premiere Pro", desc: "Editing playground" },
+                { name: "After Effects", desc: "Motion magic" },
+                { name: "Final Cut Pro", desc: "Final cut magic" },
+              ].map((tool, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <div className="text-white font-medium">{tool.name}</div>
+                  <div className="text-white/60">{tool.desc}</div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
+            CHAPTER THREE: THE VISION
+          </h3>
+          <p className="text-white/80 leading-relaxed">
+            "My journey proves that creativity can't be contained in classrooms.
+            Real growth happens when you take that first shaky shot, render your
+            first terrible edit, and keep going anyway."
+          </p>
+
+          <div
+            className="mt-8 p-5 rounded-2xl relative overflow-hidden"
+            style={{
+              background: "rgba(239, 68, 68, 0.08)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid rgba(239, 68, 68, 0.2)",
+              boxShadow: "0 0 30px rgba(239, 68, 68, 0.1)",
+            }}
+          >
+            <h4 className="text-red-400 font-mono text-sm mb-2">
+              TO THOSE STARTING OUT:
+            </h4>
+            <p className="text-white/80 italic">
+              "The equipment doesn't make the artist - your vision does. I went
+              from bored student to visual storyteller with nothing but passion
+              and a single laptop. If I can do it, so can you."
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Corner decorations */}
+      <div className="absolute top-8 left-8 w-12 h-12 border-2 border-white/10 rounded-full opacity-30" />
+      <div className="absolute bottom-8 right-8 w-12 h-12 border-2 border-white/10 rounded-full opacity-30" />
+    </motion.div>
+  );
+};
+
+// Skeleton Components
+const AboutSkeleton = () => (
+  <div className="min-h-screen bg-[#0a0a0a] flex items-center">
+    <div className="container mx-auto px-4 py-20">
+      <div className="flex flex-col lg:flex-row items-center gap-12">
+        <div className="w-full lg:w-1/2 h-[400px] lg:h-[600px]">
+          <div
+            className="h-full rounded-3xl animate-pulse"
+            style={{
+              background: "rgba(20, 20, 20, 0.5)",
+              backdropFilter: "blur(20px)",
+            }}
+          />
+        </div>
+        <div className="w-full lg:w-1/2 space-y-6">
+          <div className="h-10 w-64 bg-red-900/20 rounded-full animate-pulse" />
+          <div className="h-8 w-48 bg-white/5 rounded animate-pulse" />
+          <div className="space-y-3">
+            <div className="h-4 bg-white/5 rounded w-full animate-pulse" />
+            <div className="h-4 bg-white/5 rounded w-5/6 animate-pulse" />
+            <div className="h-4 bg-white/5 rounded w-4/6 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Main Component
 export default function About() {
   const videoRef = useRef(null);
-  const textContainerRef = useRef(null);
-  const grainRef = useRef(null);
-  const imageContainerRef = useRef(null);
-  const bioModalRef = useRef(null);
+  const aboutSectionRef = useRef(null);
   const [showBio, setShowBio] = useState(false);
-  const modalOverlayRef = useRef(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [macbookImageLoaded, setMacbookImageLoaded] = useState(false);
-  const aboutSectionRef = useRef(null);
-  const leftColumnRef = useRef(null);
-  const rightColumnRef = useRef(null);
-  const storyContentRef = useRef(null);
   const [introVideo, setIntroVideo] = useState(null);
   const [loadingVideo, setLoadingVideo] = useState(true);
   const [videoPlaying, setVideoPlaying] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch intro video when component mounts
     const fetchIntroVideo = async () => {
       try {
         setLoadingVideo(true);
         const response = await getVideoReelsByCategory("my-self-introduction");
-        if (
-          response.data &&
-          response.data.videoReels &&
-          response.data.videoReels.length > 0
-        ) {
-          // Use the first video from the response
+        if (response.data?.videoReels?.length > 0) {
           setIntroVideo(response.data.videoReels[0]);
         }
       } catch (error) {
@@ -48,6 +1010,9 @@ export default function About() {
     };
 
     fetchIntroVideo();
+
+    const timer = setTimeout(() => setLoading(false), 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -56,614 +1021,181 @@ export default function About() {
 
     const handleVideoEnd = () => {
       setVideoPlaying(false);
-      // Reset video to show thumbnail/poster
       video.currentTime = 0;
     };
 
     video.addEventListener("ended", handleVideoEnd);
-
-    return () => {
-      video.removeEventListener("ended", handleVideoEnd);
-    };
+    return () => video.removeEventListener("ended", handleVideoEnd);
   }, []);
 
-  useEffect(() => {
-    // Set initial hidden state
-    gsap.set(imageContainerRef.current, { x: -100, opacity: 0 });
-    gsap.set([leftColumnRef.current, rightColumnRef.current], {
-      y: 50,
-      opacity: 0,
-    });
-
-    const sections = [
-      { text: "Jayed> _ Passionate visual storyteller", delay: 0.3 },
-      { text: "Jayed> _ Cinematic eye since 2024", delay: 1.2 },
-      { text: "Jayed> _ Specializing in emotional narratives", delay: 1.8 },
-    ];
-
-    const tl = gsap.timeline({ repeat: -1, repeatDelay: 1 });
-
-    sections.forEach((section) => {
-      tl.to(textContainerRef.current, {
-        duration: 1.5,
-        text: section.text,
-        ease: "none",
-        delay: section.delay,
-      });
-    });
-
-    // Cursor blink effect
-    gsap.to("#terminal-cursor", {
-      opacity: 0,
-      ease: "power1.inOut",
-      repeat: -1,
-      yoyo: true,
-      duration: 0.8,
-    });
-
-    // Grain effect
-    gsap.from(grainRef.current, {
-      opacity: 0,
-      duration: 2,
-      ease: "expo.out",
-    });
-
-    // Scroll-triggered animations
-    ScrollTrigger.batch([leftColumnRef.current, rightColumnRef.current], {
-      start: "top 80%",
-      onEnter: (elements) => {
-        gsap.to(elements, {
-          y: 0,
-          opacity: 1,
-          duration: 1,
-          stagger: 0.2,
-          ease: "back.out(1.2)",
-        });
-      },
-      once: true,
-    });
-
-    // Image reveal from left after slight delay
-    gsap.to(imageContainerRef.current, {
-      x: 0,
-      opacity: 1,
-      duration: 1.5,
-      delay: 0.5,
-      ease: "back.out(1.2)",
-    });
-
-    // Story content animation
-    ScrollTrigger.create({
-      trigger: storyContentRef.current,
-      start: "top 70%",
-      onEnter: () => {
-        gsap.fromTo(
-          storyContentRef.current.querySelectorAll("h2, p, div, button"),
-          { y: 30, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "power2.out",
-          }
-        );
-      },
-      once: true,
-    });
-
-    return () => {
-      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
-    };
-  }, []);
-
-  const handleVideoHover = (enter) => {
-    if (videoRef.current) {
-      if (enter) {
-        gsap.to(videoRef.current, { scale: 1.03, duration: 0.5 });
-      } else {
-        gsap.to(videoRef.current, { scale: 1, duration: 0.5 });
-      }
-    }
-  };
-
-  const handlePlayVideo = () => {
+  const handlePlayVideo = useCallback(() => {
     if (videoRef.current) {
       videoRef.current.play();
       videoRef.current.muted = false;
       setVideoPlaying(true);
     }
-  };
+  }, []);
 
-  const toggleBio = () => {
-    if (showBio) {
-      // Closing animation sequence
-      gsap.to(bioModalRef.current, {
-        y: 50,
-        opacity: 0,
-        duration: 0.4,
-        ease: "power2.in",
-      });
-      gsap.to(modalOverlayRef.current, {
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.out",
-        onComplete: () => setShowBio(false),
-      });
-    } else {
-      setShowBio(true);
-      // Opening animation sequence
-      gsap.fromTo(
-        modalOverlayRef.current,
-        { opacity: 0 },
-        { opacity: 1, duration: 0.5, ease: "power2.in" }
-      );
-      gsap.fromTo(
-        bioModalRef.current,
-        { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.7,
-          ease: "back.out(1.2)",
-          delay: 0.1,
-        }
-      );
-    }
-  };
+  const toggleBio = useCallback(() => setShowBio((prev) => !prev), []);
+
+  const memoizedBackground = useMemo(() => <BackgroundAnimation />, []);
+
+  if (loading) return <AboutSkeleton />;
 
   return (
     <section
       ref={aboutSectionRef}
       id="about"
-      className="about-section min-h-screen bg-[#0a0a0a] text-white overflow-hidden relative"
+      className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden relative"
+      style={{
+        backgroundImage: `radial-gradient(circle at 50% 50%, rgba(239, 68, 68, 0.02) 0%, transparent 70%)`,
+      }}
     >
-      {/* Dark gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0f0f0f] to-[#1a1a1a] z-0"></div>
+      {memoizedBackground}
 
-      {/* Subtle grid pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] z-0"></div>
+      <div className="container mx-auto px-4 py-16 md:py-20 h-full flex flex-col lg:flex-row items-center gap-8 md:gap-12 relative z-20">
+        {/* Video Card */}
+        <LiquidGlassVideoCard
+          video={introVideo}
+          loading={loadingVideo}
+          videoPlaying={videoPlaying}
+          onPlay={handlePlayVideo}
+          videoRef={videoRef}
+        />
 
-      {/* Cinematic grain overlay */}
-      <div
-        ref={grainRef}
-        className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjA1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgICA8ZmVDb2xvck1hdHJpeCB0eXBlPSJzYXR1cmF0ZSIgdmFsdWVzPSIwIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPgo8L3N2Zz4=')] opacity-15 pointer-events-none z-10"
-      />
-
-      {/* Split layout */}
-      <div className="container mx-auto px-4 py-20 h-full flex flex-col lg:flex-row items-center gap-12 relative z-20">
-        {/* Video reel - Left side */}
-        <div
-          ref={leftColumnRef}
-          className="w-full lg:w-1/2 h-[400px] lg:h-[600px] relative overflow-hidden rounded-lg border border-white/10 shadow-2xl hover:shadow-red-500/30 transition-all duration-500 group"
-          onMouseEnter={() => handleVideoHover(true)}
-          onMouseLeave={() => handleVideoHover(false)}
+        {/* Right Column Content */}
+        <motion.div
+          className="w-full lg:w-1/2 flex flex-col lg:pl-8 xl:pl-12 relative"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {loadingVideo ? (
-            <div className="absolute inset-0 bg-gray-800 rounded-sm animate-pulse flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-500"></div>
-            </div>
-          ) : (
-            <>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10 pointer-events-none"></div>
-              <video
-                ref={videoRef}
-                playsInline
-                className="w-full h-full object-cover"
-                src={introVideo?.videoUrl || "/assets/reel.mp4"}
-                poster={introVideo?.thumbnailUrl}
-                onClick={handlePlayVideo}
-              >
-                <source
-                  src={introVideo?.videoUrl || "/assets/reel.mp4"}
-                  type={
-                    introVideo?.videoUrl?.endsWith(".webm")
-                      ? "video/webm"
-                      : "video/mp4"
-                  }
-                />
-                Your browser does not support the video tag.
-              </video>
-
-              {/* Play button overlay - shows when video isn't playing */}
-              {!videoPlaying && (
-                <div
-                  className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer"
-                  onClick={handlePlayVideo}
-                >
-                  <div className="w-16 h-16 bg-red-500/80 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <svg
-                      className="w-8 h-8 text-white"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              )}
-
-              <div className="absolute bottom-4 left-4 bg-black/80 px-3 py-1 rounded text-sm font-mono z-20 backdrop-blur-sm">
-                {introVideo ? `▶︎ ${introVideo.title}` : "▶︎ REEL_2024.MP4"}
-              </div>
-              <div className="absolute top-4 right-4 flex gap-2 z-20">
-                <span className="w-3 h-3 rounded-full bg-red-500 shadow-lg shadow-red-900/50"></span>
-                <span className="w-3 h-3 rounded-full bg-yellow-500 shadow-lg shadow-yellow-900/50"></span>
-                <span className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-900/50"></span>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Personal story - Right side */}
-        <div
-          ref={rightColumnRef}
-          className="w-full lg:w-1/2 flex flex-col lg:pl-12 relative"
-        >
-          {/* Terminal-style text */}
-          <div className="mb-8 font-mono text-red-400 text-lg">
-            <span ref={textContainerRef}></span>
-            <span id="terminal-cursor" className="ml-1">
+          {/* Terminal Badge */}
+          <motion.div
+            className="mb-6 md:mb-8 font-mono text-red-400 text-base md:text-lg inline-block px-4 py-2 rounded-full"
+            style={{
+              background: "rgba(239, 68, 68, 0.1)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(239, 68, 68, 0.2)",
+            }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <span>Jayed&gt; _ Passionate visual storyteller</span>
+            <motion.span
+              className="ml-1 inline-block"
+              animate={{ opacity: [1, 0, 1] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+            >
               |
-            </span>
-          </div>
+            </motion.span>
+          </motion.div>
 
-          {/* Profile image container with skeleton loading */}
-          <div
-            ref={imageContainerRef}
-            className="relative float-right ml-6 mb-8"
-          >
-            <div className="w-48 h-46 relative">
-              {/* Skeleton loader */}
-              {!imageLoaded && (
-                <div className="absolute inset-0 bg-gray-800 rounded-sm animate-pulse">
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 opacity-50"></div>
-                </div>
-              )}
+          <div className="relative">
+            {/* Profile Image - Floated right */}
+            <LiquidGlassProfileImage
+              imageLoaded={imageLoaded}
+              setImageLoaded={setImageLoaded}
+            />
 
-              {/* Image frame */}
-              <div
-                className={`absolute inset-0 rounded-sm shadow-[0_0_30px_0_rgba(255,0,0,0.3)] transition-opacity duration-500 ${
-                  imageLoaded ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <div
-                  className="w-full h-full bg-cover bg-center rounded-sm border-4 border-white/20 relative overflow-hidden"
-                  style={{ backgroundImage: `url(${jayed_Profile})` }}
-                >
-                  <div className="absolute inset-0 shadow-[inset_0_0_40px_10px_rgba(0,0,0,0.7)]"></div>
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPgogIDxmaWx0ZXIgaWQ9Im5vaXNlIj4KICAgIDxmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjAzIiBudW1PY3RhdmVzPSIyIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+CiAgPC9maWx0ZXI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4xNSIvPgo8L3N2Zz4=')] opacity-30"></div>
-                </div>
-                <div className="absolute -bottom-2 -right-2 bg-red-500 text-white px-2 py-1 text-xs rotate-3 z-20 shadow-lg shadow-red-900/50">
-                  EDITOR'S CUT
-                </div>
-              </div>
-
-              {/* Hidden image for loading detection */}
-              <img
-                src={jayed_Profile}
-                alt=""
-                className="hidden"
-                onLoad={() => setImageLoaded(true)}
-              />
-            </div>
-            {/* Outer glow */}
-            <div className="absolute -z-10 -inset-4 bg-gradient-to-br from-red-500/10 via-transparent to-red-500/5 blur-lg rounded-sm"></div>
-          </div>
-
-          {/* Story content */}
-          <div ref={storyContentRef} className="space-y-6">
-            <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600">
-              The Storyteller
-            </h2>
-
-            <p className="text-white/80 leading-relaxed font-light">
-              My journey began in the backstreets of Dhaka, armed with nothing
-              but a handheld camcorder and relentless curiosity. Today, I craft
-              visual narratives that make brands unforgettable and wedding
-              moments eternal.
-            </p>
-
-            <div className="grid grid-cols-2 gap-4 mt-8">
-              <div className="p-4 border border-white/10 bg-black/30 backdrop-blur-sm hover:bg-black/40 transition-all duration-300">
-                <h3 className="text-red-400 mb-2 font-medium">Philosophy</h3>
-                <p className="text-sm text-white/80">
-                  "Frame every shot like it's your last"
-                </p>
-              </div>
-              <div className="p-4 border border-white/10 bg-black/30 backdrop-blur-sm hover:bg-black/40 transition-all duration-300">
-                <h3 className="text-red-400 mb-2 font-medium">Specialty</h3>
-                <p className="text-sm text-white/80">
-                  Emotional storytelling through movement
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={toggleBio}
-              className="mt-8 px-6 py-3 bg-transparent border border-red-500 text-red-400 hover:bg-red-500/10 hover:text-white transition-all duration-300 flex items-center group"
-            >
-              <span>Full Biography</span>
-              <svg
-                className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 5l7 7-7 7"
-                ></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Biography Modal - Cinematic Reveal */}
-      {showBio && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Dark overlay with fade effect */}
-          <div
-            ref={modalOverlayRef}
-            className="absolute inset-0 bg-black/90 backdrop-blur-sm"
-            onClick={toggleBio}
-          ></div>
-
-          {/* Film strip borders */}
-          <div className="absolute top-0 left-0 right-0 h-8 bg-[#1a1a1a] border-b border-white/10"></div>
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-[#1a1a1a] border-t border-white/10"></div>
-
-          {/* Modal content with film reel effect */}
-          <div
-            ref={bioModalRef}
-            className="relative z-10 max-w-4xl w-full max-h-[80vh] overflow-y-auto bg-gradient-to-br from-[#0f0f0f] to-black border border-white/10 rounded-lg shadow-2xl shadow-red-900/30 p-8 scrollbar-custom"
-          >
-            {/* Close button styled as film camera button */}
-            <button
-              onClick={toggleBio}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center hover:bg-red-500/30 transition-colors"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                ></path>
-              </svg>
-            </button>
-
-            {/* Biography content with cinematic typography */}
-            <div className="space-y-6">
-              <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600 mb-6">
-                <span className="font-mono text-red-500">THE_REAL_STORY</span>{" "}
-                FROM BOREDOM TO BRILLIANCE
+            {/* Story Content - Wraps around the floated image */}
+            <div className="space-y-4 md:space-y-6">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-red-400 to-red-600">
+                The Storyteller
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="md:col-span-2">
-                  <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
-                    CHAPTER ONE: THE AWAKENING
-                  </h3>
-                  <p className="text-white/80 leading-relaxed">
-                    It was 2024. I was sitting in my university classroom,
-                    feeling completely disconnected. The traditional education
-                    path wasn't lighting me up. Then came my first paid video
-                    gig - shaky footage of a local event, edited on borrowed
-                    hardware. It wasn't glamorous, but that spark of creation
-                    changed everything.
-                  </p>
-
-                  <p className="text-white/80 leading-relaxed mt-4">
-                    When I joined Digital Dropout Skool, it felt like someone
-                    finally handed me the keys to my future. That MacBook they
-                    awarded me for my performance? It became my weapon of choice
-                    - my passport from boredom to creative freedom.
-                  </p>
-                </div>
-                <div className="bg-black/30 p-4 rounded-lg border border-white/10">
-                  <h4 className="text-red-400 font-mono text-sm mb-2">
-                    TURNING POINTS
-                  </h4>
-                  <ul className="space-y-3 text-sm text-white/80">
-                    <li className="flex items-start">
-                      <span className="text-red-400 mr-2">▶</span>
-                      <span>
-                        2024: First paid video work while in university
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-red-400 mr-2">▶</span>
-                      <span>Joined Digital Dropout Skool program</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-red-400 mr-2">▶</span>
-                      <span>
-                        Earned MacBook through exceptional performance
-                      </span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-red-400 mr-2">▶</span>
-                      <span>Found my voice in visual storytelling</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* MacBook Achievement Section with Skeleton */}
-              <div className="mt-8 p-6 bg-black/20 rounded-lg border border-white/10 relative overflow-hidden">
-                <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
-                  MY TURNING POINT
-                </h3>
-                <div className="flex flex-col md:flex-row gap-6 items-center">
-                  <div className="md:w-1/2">
-                    {/* Skeleton for MacBook image */}
-                    {!macbookImageLoaded && (
-                      <div className="relative rounded-lg overflow-hidden border-2 border-white/20 h-48 bg-gray-800 animate-pulse">
-                        <div className="absolute inset-0 bg-gradient-to-br from-gray-700 via-gray-800 to-gray-900 opacity-50"></div>
-                      </div>
-                    )}
-                    {/* MacBook image */}
-                    <div
-                      className={`relative rounded-lg overflow-hidden border-2 border-white/20 transition-opacity duration-500 ${
-                        macbookImageLoaded ? "opacity-100" : "opacity-0"
-                      }`}
-                    >
-                      <img
-                        src={macbookImage}
-                        alt="MacBook achievement"
-                        className="w-full h-auto object-cover"
-                        onLoad={() => setMacbookImageLoaded(true)}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
-                      <div className="absolute bottom-4 left-4 text-white font-mono text-sm bg-black/50 px-2 py-1 rounded">
-                        Digital Dropout Skool Reward
-                      </div>
-                    </div>
-                  </div>
-                  <div className="md:w-1/2">
-                    <p className="text-white/80 leading-relaxed">
-                      This MacBook represents more than just hardware - it
-                      symbolizes my transformation. Awarded by Digital Dropout
-                      Skool for exceptional performance, it became the tool that
-                      launched my creative journey. From my first edits to
-                      professional projects, this machine has been my constant
-                      companion.
-                    </p>
-                    <div className="mt-4 flex items-center text-red-400">
-                      <svg
-                        className="w-5 h-5 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        ></path>
-                      </svg>
-                      <span className="font-mono text-sm">
-                        Performance Reward 2025
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
-                CHAPTER TWO: THE HUSTLE
-              </h3>
-              <p className="text-white/80 leading-relaxed mb-6">
-                That MacBook became my film studio. I taught myself color
-                grading by watching YouTube tutorials at 2AM. Mastered
-                transitions by failing spectacularly on client projects. Every
-                mistake was a lesson, every client a chance to level up. From
-                filming friends' birthdays to being trusted with wedding
-                memories - each project stretched me further.
+              <p className="text-white/80 leading-relaxed font-light text-sm md:text-base">
+                My journey began in the backstreets of Dhaka, armed with nothing
+                but a handheld camcorder and relentless curiosity. Today, I
+                craft visual narratives that make brands unforgettable and
+                wedding moments eternal. From my first shaky footage to
+                professional productions, every frame tells a story of growth
+                and passion.
               </p>
-
-              <div className="bg-black/20 p-6 rounded-lg border border-white/10 mb-6">
-                <h4 className="text-red-400 font-mono text-sm mb-3">
-                  CREATIVE TOOLS
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                  <div>
-                    <div className="text-white font-medium">
-                      My Trusted MacBook
-                    </div>
-                    <div className="text-white/60">
-                      First real creative tool
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">
-                      DaVinci Resolve
-                    </div>
-                    <div className="text-white/60">Color grading wizardry</div>
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">Premiere Pro</div>
-                    <div className="text-white/60">Editing playground</div>
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">After Effects</div>
-                    <div className="text-white/60">Motion magic</div>
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">Final Cut Pro </div>
-                    <div className="text-white/60">Final cut magic</div>
-                  </div>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-semibold text-white mb-4 border-b border-white/10 pb-2">
-                CHAPTER THREE: THE VISION
-              </h3>
-              <p className="text-white/80 leading-relaxed">
-                "My journey proves that creativity can't be contained in
-                classrooms. Real growth happens when you take that first shaky
-                shot, render your first terrible edit, and keep going anyway.
-                Every frame I create now carries that hungry 2024 version of me
-                - the university student who dared to dream bigger than the
-                syllabus."
-              </p>
-
-              <div className="mt-8 p-4 bg-red-900/10 border border-red-900/30 rounded-lg">
-                <h4 className="text-red-400 font-mono text-sm mb-2">
-                  TO THOSE STARTING OUT:
-                </h4>
-                <p className="text-white/80 italic">
-                  "The equipment doesn't make the artist - your vision does. I
-                  went from bored student to visual storyteller with nothing but
-                  passion and a single laptop. If I can do it, so can you."
-                </p>
-              </div>
             </div>
           </div>
 
-          {/* Film reel corner decorations */}
-          <div className="absolute top-8 left-8 w-12 h-12 border-2 border-white/10 rounded-full opacity-30"></div>
-          <div className="absolute bottom-8 right-8 w-12 h-12 border-2 border-white/10 rounded-full opacity-30"></div>
-        </div>
-      )}
+          {/* Info Cards - Equal height grid */}
+          <motion.div
+            className="grid grid-cols-2 gap-3 md:gap-4 mt-6 md:mt-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+          >
+            <LiquidGlassInfoCard
+              title="Philosophy"
+              content="Frame every shot like it's your last"
+            />
+            <LiquidGlassInfoCard
+              title="Specialty"
+              content="Emotional storytelling through movement"
+            />
+          </motion.div>
 
-      {/* Subtle floating film particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white/10 rounded-full"
+          {/* CTA Button */}
+          <motion.button
+            onClick={toggleBio}
+            className="mt-6 md:mt-8 px-6 md:px-7 py-3 md:py-3.5 rounded-full transition-all duration-300 flex items-center group relative overflow-hidden w-fit"
             style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `float ${5 + Math.random() * 10}s linear infinite`,
-              animationDelay: `${Math.random() * 5}s`,
-              transform: `scale(${0.5 + Math.random() * 2})`,
+              background: "rgba(239, 68, 68, 0.1)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(239, 68, 68, 0.3)",
+              boxShadow: "0 4px 15px rgba(239, 68, 68, 0.1)",
             }}
-          />
-        ))}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <motion.div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              style={{
+                background:
+                  "radial-gradient(circle at 30% 50%, rgba(239,68,68,0.3) 0%, transparent 70%)",
+              }}
+            />
+            <span className="text-red-400 group-hover:text-white relative z-10 transition-colors text-sm md:text-base">
+              Full Biography
+            </span>
+            <svg
+              className="w-4 h-4 md:w-5 md:h-5 ml-2 text-red-400 group-hover:text-white group-hover:translate-x-1 transition-all relative z-10"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </motion.button>
+        </motion.div>
       </div>
 
-      {/* Subtle corner accents */}
-      <div className="absolute top-0 left-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl -z-10"></div>
+      {/* Biography Modal */}
+      <LiquidGlassModal
+        showBio={showBio}
+        toggleBio={toggleBio}
+        macbookImageLoaded={macbookImageLoaded}
+        setMacbookImageLoaded={setMacbookImageLoaded}
+      />
 
-      {/* Custom scrollbar styles */}
+      {/* Animation Styles */}
       <style jsx global>{`
+        @keyframes shimmerSlide {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+
+        .perspective-[1200px] {
+          perspective: 1200px;
+        }
+
         .scrollbar-custom {
           scrollbar-width: thin;
           scrollbar-color: #f43f5e #0f0f0f;
@@ -679,7 +1211,6 @@ export default function About() {
           background-color: #f43f5e;
           border-radius: 4px;
           border: 1px solid #ffffff20;
-          background-clip: padding-box;
         }
         .scrollbar-custom::-webkit-scrollbar-thumb:hover {
           background-color: #e11d48;
