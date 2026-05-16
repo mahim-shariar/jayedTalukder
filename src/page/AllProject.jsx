@@ -7,6 +7,8 @@ import {
   FiGrid,
   FiBox,
   FiArrowLeft,
+  FiShare2,
+  FiCheck,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,6 +16,7 @@ import {
   getVideoReelsByCategory,
   getVisibleCategories,
 } from "../services/api";
+import { shareVideo } from "../utils/shareVideo";
 
 const AllProjects = () => {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -24,6 +27,7 @@ const AllProjects = () => {
   const [projects, setProjects] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeLayout, setActiveLayout] = useState("fluid");
+  const [copiedId, setCopiedId] = useState(null);
   const videoRefs = useRef({});
   const hoverVideoRefs = useRef({});
   const navigate = useNavigate();
@@ -251,6 +255,15 @@ const AllProjects = () => {
     navigate(-1);
   };
 
+  const handleShareClick = async (e, project) => {
+    e.stopPropagation();
+    const result = await shareVideo(project.id, project.title);
+    if (result.ok) {
+      setCopiedId(project.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
+
   // Render projects based on active layout
   const renderProjects = () => {
     if (activeLayout === "stack") {
@@ -310,8 +323,25 @@ const AllProjects = () => {
                   </div>
                 </div>
 
-                <div className="project-info p-5 flex-1 flex flex-col justify-center">
-                  <div className="flex justify-between items-start mb-3">
+                <div className="project-info p-5 flex-1 flex flex-col justify-center relative">
+                  <button
+                    onClick={(e) => handleShareClick(e, project)}
+                    className="absolute top-3 right-3 z-20 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 hover:bg-red-500/80 backdrop-blur-sm border border-white/10 text-[11px] text-white transition"
+                    title="Copy share link"
+                  >
+                    {copiedId === project.id ? (
+                      <>
+                        <FiCheck className="w-3 h-3" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <FiShare2 className="w-3 h-3" />
+                        Share
+                      </>
+                    )}
+                  </button>
+                  <div className="flex justify-between items-start mb-3 pr-20">
                     <h3 className="text-xl font-bold text-white">
                       {project.title}
                     </h3>
@@ -420,8 +450,21 @@ const AllProjects = () => {
                     {formatCategoryName(project.category)}
                   </div>
 
-                  <div className="absolute top-3 right-3 bg-red-500 w-9 h-9 rounded-full flex items-center justify-center shadow-lg">
-                    <FiPlay className="text-sm text-white ml-0.5" />
+                  <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
+                    <button
+                      onClick={(e) => handleShareClick(e, project)}
+                      className="bg-black/60 hover:bg-red-500/80 backdrop-blur-sm border border-white/10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg text-white transition"
+                      title="Copy share link"
+                    >
+                      {copiedId === project.id ? (
+                        <FiCheck className="text-sm" />
+                      ) : (
+                        <FiShare2 className="text-sm" />
+                      )}
+                    </button>
+                    <div className="bg-red-500 w-9 h-9 rounded-full flex items-center justify-center shadow-lg">
+                      <FiPlay className="text-sm text-white ml-0.5" />
+                    </div>
                   </div>
 
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent">
@@ -520,6 +563,24 @@ const AllProjects = () => {
                 >
                   {project.year}
                 </div>
+
+                <button
+                  onClick={(e) => handleShareClick(e, project)}
+                  className="absolute bottom-4 right-4 z-20 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/70 hover:bg-red-500/80 backdrop-blur-sm border border-white/10 text-xs text-white transition"
+                  title="Copy share link"
+                >
+                  {copiedId === project.id ? (
+                    <>
+                      <FiCheck className="w-3 h-3" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <FiShare2 className="w-3 h-3" />
+                      Share
+                    </>
+                  )}
+                </button>
 
                 <div className="absolute inset-0 m-auto bg-red-500 w-14 h-14 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <FiPlay className="text-xl text-white ml-1" />

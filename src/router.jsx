@@ -12,6 +12,7 @@ const AllProject = lazy(() => import("./page/AllProject"));
 const About = lazy(() => import("./page/About"));
 const Testimonials = lazy(() => import("./page/Testimonials"));
 const Contact = lazy(() => import("./page/Contact"));
+const SharedVideo = lazy(() => import("./page/SharedVideo"));
 
 // Layout components
 const RootLayout = lazy(() => import("./layouts/RootLayout"));
@@ -48,6 +49,10 @@ export const routerConfig = [
       {
         path: "contact",
         element: <Contact />,
+      },
+      {
+        path: "video/:id",
+        element: <SharedVideo />,
       },
     ],
   },

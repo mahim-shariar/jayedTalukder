@@ -7,9 +7,12 @@ import {
   FiFilm,
   FiGrid,
   FiBox,
+  FiShare2,
+  FiCheck,
 } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { getVideoReels } from "../../services/api";
+import { shareVideo } from "../../utils/shareVideo";
 
 const Showreel = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,6 +21,7 @@ const Showreel = () => {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
   const [activeLayout, setActiveLayout] = useState("fluid");
+  const [copiedId, setCopiedId] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isInView, setIsInView] = useState(false);
   const videoRefs = useRef({});
@@ -241,6 +245,15 @@ const Showreel = () => {
     navigate("/projects");
   };
 
+  const handleShareClick = async (e, project) => {
+    e.stopPropagation();
+    const result = await shareVideo(project.id, project.title);
+    if (result.ok) {
+      setCopiedId(project.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
+
   // Calculate parallax effect based on mouse position
   const calculateParallax = (index, intensity = 6) => {
     const x = mousePosition.x * intensity * (index % 2 === 0 ? 1 : -1);
@@ -311,8 +324,25 @@ const Showreel = () => {
                   </div>
                 </div>
 
-                <div className="project-info p-5 flex-1 flex flex-col justify-center">
-                  <div className="flex justify-between items-start mb-3">
+                <div className="project-info p-5 flex-1 flex flex-col justify-center relative">
+                  <button
+                    onClick={(e) => handleShareClick(e, project)}
+                    className="absolute top-3 right-3 z-20 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 hover:bg-red-500/80 backdrop-blur-sm border border-white/10 text-[11px] text-white transition"
+                    title="Copy share link"
+                  >
+                    {copiedId === project.id ? (
+                      <>
+                        <FiCheck className="w-3 h-3" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <FiShare2 className="w-3 h-3" />
+                        Share
+                      </>
+                    )}
+                  </button>
+                  <div className="flex justify-between items-start mb-3 pr-20">
                     <h3 className="text-xl font-bold text-white">
                       {project.title}
                     </h3>
@@ -411,8 +441,21 @@ const Showreel = () => {
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-70" />
 
-                  <div className="absolute top-3 right-3 bg-red-500 w-9 h-9 rounded-full flex items-center justify-center shadow-lg">
-                    <FiPlay className="text-sm text-white ml-0.5" />
+                  <div className="absolute top-3 right-3 flex items-center gap-2 z-20">
+                    <button
+                      onClick={(e) => handleShareClick(e, project)}
+                      className="bg-black/60 hover:bg-red-500/80 backdrop-blur-sm border border-white/10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg text-white transition"
+                      title="Copy share link"
+                    >
+                      {copiedId === project.id ? (
+                        <FiCheck className="text-sm" />
+                      ) : (
+                        <FiShare2 className="text-sm" />
+                      )}
+                    </button>
+                    <div className="bg-red-500 w-9 h-9 rounded-full flex items-center justify-center shadow-lg">
+                      <FiPlay className="text-sm text-white ml-0.5" />
+                    </div>
                   </div>
 
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black to-transparent">
@@ -517,6 +560,24 @@ const Showreel = () => {
                 >
                   {project.year}
                 </motion.div>
+
+                <button
+                  onClick={(e) => handleShareClick(e, project)}
+                  className="absolute top-4 left-4 z-20 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/70 hover:bg-red-500/80 backdrop-blur-sm border border-white/10 text-xs text-white transition"
+                  title="Copy share link"
+                >
+                  {copiedId === project.id ? (
+                    <>
+                      <FiCheck className="w-3 h-3" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <FiShare2 className="w-3 h-3" />
+                      Share
+                    </>
+                  )}
+                </button>
 
                 <div className="absolute inset-0 m-auto bg-red-500 w-14 h-14 rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <FiPlay className="text-xl text-white ml-1" />

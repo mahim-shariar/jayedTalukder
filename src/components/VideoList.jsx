@@ -1,8 +1,20 @@
 // List display for videos
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { FiVideo, FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiVideo, FiEdit, FiTrash2, FiShare2, FiCheck } from "react-icons/fi";
+import { shareVideo } from "../utils/shareVideo";
 
 export default function VideoList({ videos, onEdit, onDelete }) {
+  const [copiedId, setCopiedId] = useState(null);
+
+  const handleShare = async (video) => {
+    const result = await shareVideo(video._id, video.title);
+    if (result.ok) {
+      setCopiedId(video._id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
+
   if (videos.length === 0) {
     return (
       <div className="text-center py-16">
@@ -52,6 +64,25 @@ export default function VideoList({ videos, onEdit, onDelete }) {
               </div>
             </div>
             <div className="ml-2 flex-shrink-0 flex space-x-2">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleShare(video)}
+                className="inline-flex items-center px-3 py-1 border border-gray-200 shadow-sm text-sm leading-4 font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+                title="Copy share link"
+              >
+                {copiedId === video._id ? (
+                  <>
+                    <FiCheck className="mr-1.5 text-green-600" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <FiShare2 className="mr-1.5" />
+                    Share
+                  </>
+                )}
+              </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
