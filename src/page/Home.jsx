@@ -9,6 +9,7 @@ const Testimonials = React.lazy(() =>
 const Contact = React.lazy(() => import("../components/sections/Contact"));
 const EasterEgg = React.lazy(() => import("../components/sections/EasterEgg"));
 const Showreel = React.lazy(() => import("../components/sections/Showreel"));
+const PricingSection = React.lazy(() => import("../components/sections/Pricing"));
 
 const Home = () => {
   return (
@@ -16,6 +17,7 @@ const Home = () => {
       <Hero />
       <About />
       <Showreel />
+      <PricingSection />
       <Services />
       <Testimonials />
       <Contact />

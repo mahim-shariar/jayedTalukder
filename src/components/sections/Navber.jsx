@@ -80,6 +80,7 @@ export default function Navbar() {
     { name: "Home", path: "/" },
     { name: "About", path: "/about" },
     { name: "Showreel", path: "/projects" },
+    { name: "Pricing", path: "/pricing" },
     { name: "Testimonials", path: "/testimonials" },
     { name: "Contact", path: "/contact" },
   ];
@@ -363,7 +364,7 @@ export default function Navbar() {
                     </div>
                   </motion.button>
 
-                  {/* Profile Dropdown - FIXED */}
+                  {/* Profile Dropdown */}
                   {isLoggedIn && (
                     <div className="relative" ref={profileDropdownRef}>
                       <motion.button
@@ -394,7 +395,7 @@ export default function Navbar() {
                         </div>
                       </motion.button>
 
-                      {/* Dropdown Menu - FIXED VISIBILITY */}
+                      {/* Dropdown Menu */}
                       <AnimatePresence>
                         {showProfileDropdown && (
                           <motion.div
@@ -455,6 +456,26 @@ export default function Navbar() {
                                   />
                                 </svg>
                                 Profile
+                              </Link>
+                              <Link
+                                to="/dashboard/packages"
+                                className="flex items-center px-4 py-3 text-sm text-white/90 hover:text-white hover:bg-white/[0.08] transition-all duration-500"
+                                onClick={() => setShowProfileDropdown(false)}
+                              >
+                                <svg
+                                  className="w-4 h-4 mr-3"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                  />
+                                </svg>
+                                Packages
                               </Link>
                               <div className="border-t border-white/10 my-1"></div>
                               <button
@@ -657,6 +678,19 @@ export default function Navbar() {
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-white/70 hover:text-white hover:bg-white/[0.06] transition-all duration-500"
                           >
+                            <svg
+                              className="w-5 h-5 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                              />
+                            </svg>
                             Dashboard
                           </Link>
                           <Link
@@ -664,7 +698,40 @@ export default function Navbar() {
                             onClick={() => setIsMenuOpen(false)}
                             className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-white/70 hover:text-white hover:bg-white/[0.06] transition-all duration-500"
                           >
+                            <svg
+                              className="w-5 h-5 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
                             Profile
+                          </Link>
+                          <Link
+                            to="/dashboard/packages"
+                            onClick={() => setIsMenuOpen(false)}
+                            className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-white/70 hover:text-white hover:bg-white/[0.06] transition-all duration-500"
+                          >
+                            <svg
+                              className="w-5 h-5 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                              />
+                            </svg>
+                            Packages
                           </Link>
                           <button
                             onClick={() => {
@@ -673,6 +740,19 @@ export default function Navbar() {
                             }}
                             className="flex items-center w-full px-4 py-3 rounded-xl text-base font-medium text-[#f43f5e] hover:text-[#f43f5e] hover:bg-white/[0.06] transition-all duration-500"
                           >
+                            <svg
+                              className="w-5 h-5 mr-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                              />
+                            </svg>
                             Logout
                           </button>
                         </>

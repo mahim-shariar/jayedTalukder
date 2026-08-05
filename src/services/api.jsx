@@ -209,3 +209,29 @@ export const uploadFile = async (file) => {
 };
 
 export default api;
+
+// Packages API
+export const getPackages = async (params = {}) => {
+  const response = await api.get("/packages", { params });
+  return response.data;
+};
+
+export const getPackage = async (slug) => {
+  const response = await api.get(`/packages/${slug}`);
+  return response.data;
+};
+
+export const createPackage = async (pkgData) => {
+  const response = await api.post(`/packages`, pkgData);
+  return response.data;
+};
+
+export const updatePackage = async (slug, pkgData) => {
+  const response = await api.patch(`/packages/${slug}`, pkgData);
+  return response.data;
+};
+
+export const deletePackage = async (slug) => {
+  const response = await api.delete(`/packages/${slug}`);
+  return response.data;
+};

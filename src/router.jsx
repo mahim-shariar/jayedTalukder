@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 // Lazy-loaded pages
 const Home = lazy(() => import("./page/Home"));
 const Dashboard = lazy(() => import("./page/Dashboard"));
+const DashboardPackages = lazy(() => import("./page/DashboardPackages"));
 const ProfilePage = lazy(() => import("./page/ProfilePage"));
 const NotFoundPage = lazy(() => import("./page/NotFoundPage"));
 const AllProject = lazy(() => import("./page/AllProject"));
@@ -13,6 +14,7 @@ const About = lazy(() => import("./page/About"));
 const Testimonials = lazy(() => import("./page/Testimonials"));
 const Contact = lazy(() => import("./page/Contact"));
 const SharedVideo = lazy(() => import("./page/SharedVideo"));
+const Pricing = lazy(() => import("./page/Pricing"));
 
 // Layout components
 const RootLayout = lazy(() => import("./layouts/RootLayout"));
@@ -33,6 +35,10 @@ export const routerConfig = [
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: "pricing",
+        element: <Pricing />,
       },
       {
         path: "projects",
@@ -74,6 +80,10 @@ export const routerConfig = [
       {
         path: "profile",
         element: <ProfilePage />,
+      },
+      {
+        path: "packages",
+        element: <DashboardPackages />,
       },
     ],
   },
