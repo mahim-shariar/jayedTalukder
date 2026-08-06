@@ -1,5 +1,5 @@
 // components/Contact.js
-import { useRef, useState, useMemo, useCallback } from "react";
+import { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import {
   motion,
   useScroll,
@@ -8,12 +8,21 @@ import {
   useSpring,
 } from "framer-motion";
 import confetti from "canvas-confetti";
-import { sendEmail } from "../../utils/emailService";
 import { FaPhone, FaEnvelope, FaWhatsapp } from "react-icons/fa";
 import { FiSend, FiLoader } from "react-icons/fi";
 import { BsStars, BsPencil } from "react-icons/bs";
 import { HiOutlineLocationMarker } from "react-icons/hi";
 import { FaSquareXTwitter } from "react-icons/fa6";
+
+// Note: You'll need to create this emailService file
+// For now, let's create a mock function
+const sendEmail = async (data) => {
+  // Mock email sending - replace with your actual email service
+  console.log("Sending email:", data);
+  return new Promise((resolve) => {
+    setTimeout(resolve, 1500);
+  });
+};
 
 // Liquid Glass Form Card Component
 const LiquidGlassFormCard = ({
@@ -48,13 +57,13 @@ const LiquidGlassFormCard = ({
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     mouseX.set(x);
     mouseY.set(y);
-  }, []);
+  }, [mouseX, mouseY]);
 
   const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
     mouseY.set(0);
     setIsHovered(false);
-  }, []);
+  }, [mouseX, mouseY]);
 
   return (
     <motion.div
@@ -78,13 +87,9 @@ const LiquidGlassFormCard = ({
         <motion.div
           className="absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-500"
           style={{
-            background: useTransform(
-              [glowX, glowY],
-              ([x, y]) =>
-                `radial-gradient(circle at ${(x + 0.5) * 100}% ${
-                  (y + 0.5) * 100
-                }%, rgba(255,255,255,0.12) 0%, transparent 70%)`
-            ),
+            background: `radial-gradient(circle at ${(glowX.get() + 0.5) * 100}% ${
+              (glowY.get() + 0.5) * 100
+            }%, rgba(255,255,255,0.12) 0%, transparent 70%)`,
           }}
         />
 
@@ -106,13 +111,9 @@ const LiquidGlassFormCard = ({
           <motion.div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
             style={{
-              background: useTransform(
-                [glowX, glowY],
-                ([x, y]) =>
-                  `radial-gradient(circle at ${(x + 0.5) * 100}% ${
-                    (y + 0.5) * 100
-                  }%, rgba(255,255,255,0.06) 0%, transparent 60%)`
-              ),
+              background: `radial-gradient(circle at ${(glowX.get() + 0.5) * 100}% ${
+                (glowY.get() + 0.5) * 100
+              }%, rgba(255,255,255,0.06) 0%, transparent 60%)`,
             }}
           />
 
@@ -318,13 +319,13 @@ const LiquidGlassContactCard = ({ link, index }) => {
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     mouseX.set(x);
     mouseY.set(y);
-  }, []);
+  }, [mouseX, mouseY]);
 
   const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
     mouseY.set(0);
     setIsHovered(false);
-  }, []);
+  }, [mouseX, mouseY]);
 
   return (
     <motion.a
@@ -355,13 +356,9 @@ const LiquidGlassContactCard = ({ link, index }) => {
         <motion.div
           className="absolute inset-0 opacity-40 group-hover:opacity-70 transition-opacity duration-500"
           style={{
-            background: useTransform(
-              [glowX, glowY],
-              ([x, y]) =>
-                `radial-gradient(circle at ${(x + 0.5) * 100}% ${
-                  (y + 0.5) * 100
-                }%, rgba(255,255,255,0.12) 0%, transparent 70%)`
-            ),
+            background: `radial-gradient(circle at ${(glowX.get() + 0.5) * 100}% ${
+              (glowY.get() + 0.5) * 100
+            }%, rgba(255,255,255,0.12) 0%, transparent 70%)`,
           }}
         />
 
@@ -382,13 +379,9 @@ const LiquidGlassContactCard = ({ link, index }) => {
           <motion.div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
             style={{
-              background: useTransform(
-                [glowX, glowY],
-                ([x, y]) =>
-                  `radial-gradient(circle at ${(x + 0.5) * 100}% ${
-                    (y + 0.5) * 100
-                  }%, rgba(255,255,255,0.05) 0%, transparent 60%)`
-              ),
+              background: `radial-gradient(circle at ${(glowX.get() + 0.5) * 100}% ${
+                (glowY.get() + 0.5) * 100
+              }%, rgba(255,255,255,0.05) 0%, transparent 60%)`,
             }}
           />
 
@@ -730,8 +723,8 @@ export default function Contact() {
     },
   ];
 
-  // Simulate loading
-  useState(() => {
+  // FIXED: Use useEffect for loading simulation
+  useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);

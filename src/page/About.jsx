@@ -707,7 +707,7 @@ const About = () => {
         style={{ y: backgroundY }}
       />
 
-      <div className="container mx-auto px-4 py-20 relative z-20">
+      <div className="container mx-auto px-4 pt-32 pb-20 relative z-20">
         {/* Header Section */}
         <div className="text-center mb-16">
           <motion.div
