@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { getPackages } from "../services/api";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useMotionValue, useSpring, useTransform,motion } from "framer-motion";
+import { Link, useLocation } from "react-router-dom";
+import { sharePackage } from "../utils/sharePackage";
 import { 
   FaCheck, 
   FaStar, 
@@ -14,7 +15,8 @@ import {
   FaPhone,
   FaEnvelope,
   FaChevronDown,
-  FaChevronUp
+  FaChevronUp,
+  FaShareAlt
 } from "react-icons/fa";
 
 // Background particles configuration
@@ -73,6 +75,7 @@ const BackgroundAnimation = () => (
 // Pricing Card Component
 const PricingCard = ({ pkg, index }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState("");
   const cardRef = useRef(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -89,15 +92,33 @@ const PricingCard = ({ pkg, index }) => {
     const y = (e.clientY - rect.top) / rect.height - 0.5;
     mouseX.set(x);
     mouseY.set(y);
-  }, []);
+  }, [mouseX, mouseY]);
 
   const handleMouseLeave = useCallback(() => {
     mouseX.set(0);
     mouseY.set(0);
     setIsHovered(false);
-  }, []);
+  }, [mouseX, mouseY]);
 
   const isFeatured = index === 1;
+
+  useEffect(() => {
+    if (!shareFeedback) return;
+    const timer = window.setTimeout(() => setShareFeedback(""), 1800);
+    return () => window.clearTimeout(timer);
+  }, [shareFeedback]);
+
+  const handleShare = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const result = await sharePackage(pkg.slug || pkg._id, pkg.name);
+      setShareFeedback(result.copied ? "Link copied to clipboard" : "Share link ready");
+    } catch {
+      setShareFeedback("Unable to share package");
+    }
+  };
 
   return (
     <motion.div
@@ -214,25 +235,41 @@ const PricingCard = ({ pkg, index }) => {
               }}
             />
 
-            <motion.div
-              className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mb-4 relative overflow-hidden self-start"
-              style={{
-                background: "rgba(35,35,35,0.9)",
-                backdropFilter: "blur(10px)",
-                color: "#f87171",
-                boxShadow: `
-                  inset 0 1px 2px rgba(255,255,255,0.06),
-                  inset 0 -2px 4px rgba(0,0,0,0.2),
-                  0 8px 16px -4px rgba(0,0,0,0.3)
-                `,
-                transform: "translateZ(20px)",
-              }}
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-b from-white/6 to-transparent" />
-              <span className="relative z-10">{pkg.name}</span>
-            </motion.div>
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <motion.div
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium relative overflow-hidden self-start"
+                style={{
+                  background: "rgba(35,35,35,0.9)",
+                  backdropFilter: "blur(10px)",
+                  color: "#f87171",
+                  boxShadow: `
+                    inset 0 1px 2px rgba(255,255,255,0.06),
+                    inset 0 -2px 4px rgba(0,0,0,0.2),
+                    0 8px 16px -4px rgba(0,0,0,0.3)
+                  `,
+                  transform: "translateZ(20px)",
+                }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-white/6 to-transparent" />
+                <span className="relative z-10">{pkg.name}</span>
+              </motion.div>
+
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-medium text-gray-200 backdrop-blur transition hover:bg-white/10"
+                title={`Share ${pkg.name}`}
+              >
+                <FaShareAlt className="h-3.5 w-3.5" />
+                Share
+              </button>
+            </div>
+
+            {shareFeedback && (
+              <p className="text-xs text-red-300/90 mb-3 relative z-10">{shareFeedback}</p>
+            )}
 
             <div className="space-y-4 relative z-10 flex-1 flex flex-col">
               <div>
@@ -525,6 +562,17 @@ const PricingSkeleton = () => (
 export default function PricingPage() {
   const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+
+  const selectedPackageSlug = new URLSearchParams(location.search).get("package");
+  const visiblePackages = useMemo(() => {
+    if (!selectedPackageSlug) return packages;
+
+    return packages.filter((pkg) => {
+      const slug = pkg.slug || pkg._id;
+      return slug?.toLowerCase() === selectedPackageSlug.toLowerCase();
+    });
+  }, [packages, selectedPackageSlug]);
 
   useEffect(() => {
     let mounted = true;
@@ -591,9 +639,9 @@ export default function PricingPage() {
             <PricingSkeleton />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {packages && packages.length > 0 ? (
-                packages.map((pkg, index) => (
-                  <PricingCard key={pkg._id} pkg={pkg} index={index} />
+              {visiblePackages && visiblePackages.length > 0 ? (
+                visiblePackages.map((pkg, index) => (
+                  <PricingCard key={pkg._id || pkg.slug} pkg={pkg} index={index} />
                 ))
               ) : (
                 <div className="col-span-full text-center text-gray-500 py-12">

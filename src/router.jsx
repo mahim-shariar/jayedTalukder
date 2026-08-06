@@ -15,6 +15,7 @@ const Testimonials = lazy(() => import("./page/Testimonials"));
 const Contact = lazy(() => import("./page/Contact"));
 const SharedVideo = lazy(() => import("./page/SharedVideo"));
 const Pricing = lazy(() => import("./page/Pricing"));
+const SharedPackage = lazy(() => import("./page/SharedPackage"));
 
 // Layout components
 const RootLayout = lazy(() => import("./layouts/RootLayout"));
@@ -59,6 +60,10 @@ export const routerConfig = [
       {
         path: "video/:id",
         element: <SharedVideo />,
+      },
+      {
+        path: "package/:slug",
+        element: <SharedPackage />,
       },
     ],
   },
